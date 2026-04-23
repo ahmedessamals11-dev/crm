@@ -1,0 +1,3846 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I Plus One | SalesFlow CRM</title>
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- SheetJS for Excel export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+<style>
+    /* --- 1. Variables & Design System --- */
+    :root {
+        /* Enhanced Color Palette */
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #e0e7ff;
+        --primary-soft: #818cf8;
+        --secondary: #64748b;
+        --accent: #8b5cf6;
+        
+        /* Status Colors - More vibrant */
+        --success: #10b981;
+        --success-bg: #d1fae5;
+        --warning: #f59e0b;
+        --warning-bg: #fef3c7;
+        --danger: #ef4444;
+        --danger-bg: #fee2e2;
+        --info: #3b82f6;
+        --info-bg: #dbeafe;
+        --potential: #8b5cf6;
+        --potential-bg: #f3e8ff;
+        
+        /* Neutrals & Glass */
+        --bg-body: #f8fafc;
+        --surface: #ffffff;
+        --surface-glass: rgba(255, 255, 255, 0.85);
+        --surface-glass-dark: rgba(255, 255, 255, 0.95);
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --text-soft: #94a3b8;
+        
+        /* Enhanced Effects */
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        --shadow-float: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        
+        /* Radius */
+        --radius-lg: 20px;
+        --radius-md: 14px;
+        --radius-sm: 10px;
+        --radius-xs: 6px;
+        
+        /* Typography */
+        --font-display: 'Plus Jakarta Sans', sans-serif;
+        --font-body: 'Inter', sans-serif;
+        --font-arabic: 'Cairo', sans-serif;
+        
+        /* Transitions */
+        --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { 
+        margin: 0; 
+        padding: 0; 
+        box-sizing: border-box; 
+        outline: none; 
+        -webkit-tap-highlight-color: transparent; 
+    }
+
+    body {
+        font-family: var(--font-body);
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        height: 100vh;
+        overflow: hidden;
+        background-image: 
+            radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
+    }
+
+    /* RTL Support for Arabic text */
+    [dir="rtl"], .rtl {
+        direction: rtl;
+        font-family: var(--font-arabic), sans-serif;
+    }
+
+    /* --- 2. Enhanced Utilities --- */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .w-full { width: 100%; }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-lg { font-size: 1.125rem; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .text-muted { color: var(--text-muted); }
+    .text-primary { color: var(--primary); }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+
+    /* --- 3. Enhanced Components --- */
+    
+    /* Buttons with micro-interactions */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.65rem 1.25rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: var(--transition-all);
+        border: none;
+        gap: 0.5rem;
+        font-family: var(--font-display);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.4s, height 0.4s;
+    }
+
+    .btn:active::after {
+        width: 200px;
+        height: 200px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .btn-primary:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost { 
+        background: transparent; 
+        color: var(--text-muted);
+        border: 1px solid transparent;
+    }
+    .btn-ghost:hover { 
+        background: rgba(0,0,0,0.02);
+        border-color: var(--border);
+        color: var(--text-main); 
+    }
+
+    .btn-icon { 
+        padding: 0.5rem; 
+        border-radius: 50%; 
+        aspect-ratio: 1; 
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Enhanced Inputs */
+    .input-wrapper { 
+        position: relative; 
+        width: 100%; 
+    }
+    .input-icon {
+        position: absolute; 
+        left: 1rem; 
+        top: 50%; 
+        transform: translateY(-50%);
+        color: var(--text-soft); 
+        pointer-events: none;
+        transition: color 0.2s;
+    }
+    .input-field {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        transition: var(--transition-all);
+        background: var(--surface);
+        color: var(--text-main);
+        font-family: var(--font-body);
+    }
+    .input-field:hover {
+        border-color: var(--border);
+    }
+    .input-field:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-light);
+    }
+    .input-wrapper:focus-within .input-icon {
+        color: var(--primary);
+    }
+
+    /* Cards with hover effects */
+    .card {
+        background: var(--surface-glass);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        transition: var(--transition-smooth);
+    }
+    .card:hover {
+        box-shadow: var(--shadow-lg);
+        border-color: rgba(255,255,255,0.9);
+    }
+
+    /* Enhanced Badges */
+    .badge {
+        display: inline-flex; 
+        align-items: center; 
+        gap: 0.35rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 100px;
+        font-size: 0.75rem; 
+        font-weight: 700;
+        text-transform: uppercase; 
+        letter-spacing: 0.03em;
+        transition: var(--transition-all);
+    }
+    .badge-new { 
+        background: linear-gradient(135deg, var(--info-bg) 0%, #ffffff 100%);
+        color: var(--info); 
+        border: 1px solid var(--info-bg);
+    }
+    .badge-contacted { 
+        background: linear-gradient(135deg, var(--warning-bg) 0%, #ffffff 100%);
+        color: var(--warning); 
+        border: 1px solid var(--warning-bg);
+    }
+    .badge-won { 
+        background: linear-gradient(135deg, var(--success-bg) 0%, #ffffff 100%);
+        color: var(--success); 
+        border: 1px solid var(--success-bg);
+    }
+    .badge-lost { 
+        background: linear-gradient(135deg, var(--danger-bg) 0%, #ffffff 100%);
+        color: var(--danger); 
+        border: 1px solid var(--danger-bg);
+    }
+    .badge-followup {
+        background: linear-gradient(135deg, var(--info-bg) 0%, #ffffff 100%);
+        color: var(--info);
+        border: 1px solid var(--info-bg);
+    }
+    .badge-potential {
+        background: linear-gradient(135deg, var(--potential-bg) 0%, #ffffff 100%);
+        color: var(--potential);
+        border: 1px solid var(--potential-bg);
+    }
+
+    /* Role Badges */
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+    }
+    .role-owner {
+        background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+    .role-manager {
+        background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%);
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+    .role-agent {
+        background: linear-gradient(135deg, #e0e7ff 0%, #ffffff 100%);
+        color: #4338ca;
+        border: 1px solid #c7d2fe;
+    }
+
+    /* --- 4. Enhanced Layout --- */
+
+    /* Login Screen */
+    .login-screen {
+        position: fixed; 
+        inset: 0; 
+        z-index: 100;
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 27, 75, 0.9) 50%, rgba(49, 46, 129, 0.9) 100%),
+                    url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .login-screen::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    
+    .login-card {
+        background: var(--surface-glass-dark);
+        backdrop-filter: blur(20px);
+        width: 100%; 
+        max-width: 420px;
+        padding: 2.5rem;
+        border-radius: 32px;
+        box-shadow: var(--shadow-float);
+        animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid rgba(255,255,255,0.8);
+        position: relative;
+        z-index: 2;
+    }
+    
+    .login-screen::after {
+        content: '';
+        position: absolute;
+        top: 10%;
+        right: 5%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* App Layout */
+    .app-layout { 
+        display: flex; 
+        height: 100vh; 
+        opacity: 0;
+        animation: fadeIn 0.4s ease forwards;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 280px;
+        background: var(--surface-glass-dark);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255,255,255,0.5);
+        display: flex; 
+        flex-direction: column;
+        padding: 2rem 1.5rem;
+        flex-shrink: 0;
+        z-index: 20;
+    }
+    .nav-link {
+        display: flex; 
+        align-items: center; 
+        gap: 0.75rem;
+        padding: 0.85rem 1.25rem;
+        border-radius: var(--radius-md);
+        color: var(--text-muted); 
+        font-weight: 500;
+        transition: var(--transition-all);
+        cursor: pointer;
+        margin-bottom: 0.25rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0;
+        background: var(--primary-light);
+        transition: width 0.2s ease;
+        z-index: -1;
+    }
+    .nav-link:hover::before {
+        width: 100%;
+    }
+    .nav-link:hover { 
+        color: var(--primary); 
+        transform: translateX(4px);
+    }
+    .nav-link.active { 
+        background: var(--primary-light); 
+        color: var(--primary);
+        font-weight: 600;
+    }
+    .nav-link i { 
+        width: 20px; 
+        text-align: center; 
+        font-size: 1.1rem;
+    }
+
+    /* Main Area */
+    .main-area { 
+        flex: 1; 
+        display: flex; 
+        flex-direction: column; 
+        min-width: 0; 
+        position: relative; 
+    }
+    
+    .top-bar {
+        height: 80px;
+        background: var(--surface-glass-dark);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255,255,255,0.5);
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between;
+        padding: 0 2rem; 
+        flex-shrink: 0;
+    }
+
+    .content-scroll {
+        flex: 1; 
+        padding: 2rem; 
+        overflow-y: auto;
+        display: flex; 
+        flex-direction: column; 
+        gap: 2rem;
+    }
+
+    /* Dashboard Grid */
+    .stats-grid {
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+    }
+    .stat-card {
+        padding: 1.75rem; 
+        display: flex; 
+        align-items: center; 
+        gap: 1.25rem;
+        transition: var(--transition-smooth);
+        cursor: default;
+    }
+    .stat-card:hover { 
+        transform: translateY(-5px) scale(1.02); 
+    }
+    .stat-icon-box {
+        width: 64px; 
+        height: 64px; 
+        border-radius: 18px;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        font-size: 1.75rem;
+        transition: var(--transition-smooth);
+    }
+    .stat-card:hover .stat-icon-box {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    /* Workspace */
+    .workspace {
+        display: grid;
+        grid-template-columns: 1.3fr 0.9fr;
+        gap: 1.5rem;
+        min-height: 600px;
+    }
+
+    .panel-header {
+        padding: 1.25rem 1.5rem; 
+        border-bottom: 2px solid var(--border-light);
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between;
+        background: rgba(255,255,255,0.7);
+    }
+    .panel-title { 
+        font-weight: 700; 
+        font-family: var(--font-display); 
+        color: var(--text-main);
+        font-size: 1.1rem;
+    }
+
+    .panel-body { 
+        overflow-y: auto; 
+        flex: 1; 
+        position: relative; 
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-light) var(--border-light);
+    }
+    .panel-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    .panel-body::-webkit-scrollbar-track {
+        background: var(--border-light);
+    }
+    .panel-body::-webkit-scrollbar-thumb {
+        background: var(--primary-light);
+        border-radius: 20px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-light);
+    }
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0 0.5rem;
+    }
+
+    /* Table Styling */
+    .table-row {
+        display: grid; 
+        grid-template-columns: 2fr 1fr 1fr 1.5fr;
+        padding: 1.25rem 1.5rem; 
+        align-items: center;
+        border-bottom: 1px solid var(--border-light);
+        cursor: pointer; 
+        transition: var(--transition-all);
+        animation: slideInRow 0.3s ease forwards;
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    .table-row:nth-child(1) { animation-delay: 0.05s; }
+    .table-row:nth-child(2) { animation-delay: 0.1s; }
+    .table-row:nth-child(3) { animation-delay: 0.15s; }
+    .table-row:nth-child(4) { animation-delay: 0.2s; }
+    .table-row:nth-child(5) { animation-delay: 0.25s; }
+    
+    .table-row:hover { 
+        background: linear-gradient(90deg, var(--primary-light) 0%, transparent 100%);
+        transform: translateX(4px);
+    }
+    .table-row.selected { 
+        background: var(--primary-light); 
+        border-left: 4px solid var(--primary);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .table-head {
+        padding: 0.75rem 1.5rem; 
+        font-size: 0.7rem;
+        text-transform: uppercase; 
+        letter-spacing: 0.08em;
+        color: var(--text-soft); 
+        font-weight: 600;
+        display: grid; 
+        grid-template-columns: 2fr 1fr 1fr 1.5fr;
+        background: rgba(255,255,255,0.5);
+    }
+
+    /* Detail Inspector */
+    .inspector-content { 
+        padding: 1.75rem; 
+        animation: fadeIn 0.3s ease;
+    }
+    .lead-profile {
+        text-align: center; 
+        margin-bottom: 2rem;
+        padding-bottom: 2rem; 
+        border-bottom: 2px dashed var(--border-light);
+    }
+    .lead-avatar-lg {
+        width: 100px; 
+        height: 100px; 
+        background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%);
+        border-radius: 50%; 
+        margin: 0 auto 1.5rem;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        font-size: 2.5rem; 
+        font-weight: 700; 
+        color: var(--primary);
+        border: 4px solid white; 
+        box-shadow: var(--shadow-lg);
+        transition: var(--transition-smooth);
+    }
+    .lead-avatar-lg:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-xl);
+    }
+    
+    /* Action Grid - 3x2 grid for 6 buttons */
+    .action-grid {
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 0.75rem; 
+        margin-bottom: 1.5rem;
+    }
+    .action-btn {
+        border: 2px solid var(--border-light); 
+        border-radius: 14px;
+        padding: 0.75rem 0.5rem; 
+        text-align: center;
+        cursor: pointer; 
+        transition: var(--transition-smooth);
+        background: white; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .action-btn i { 
+        font-size: 1.1rem; 
+        transition: transform 0.2s;
+    }
+    .action-btn:hover { 
+        border-color: var(--primary); 
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+    }
+    .action-btn:hover i {
+        transform: scale(1.1);
+    }
+    .action-btn.active { 
+        border-color: currentColor; 
+        background: currentColor; 
+        color: white; 
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .btn-won { color: var(--success); border-color: var(--success-bg); }
+    .btn-won.active { background: var(--success); color: white; }
+    .btn-notinterested { color: var(--danger); border-color: var(--danger-bg); }
+    .btn-notinterested.active { background: var(--danger); color: white; }
+    .btn-follow { color: var(--info); border-color: var(--info-bg); }
+    .btn-follow.active { background: var(--info); color: white; }
+    .btn-noanswer { color: var(--warning); border-color: var(--warning-bg); }
+    .btn-noanswer.active { background: var(--warning); color: white; }
+    .btn-potential { color: var(--potential); border-color: var(--potential-bg); }
+    .btn-potential.active { background: var(--potential); color: white; }
+    .btn-interested { color: var(--success); border-color: var(--success-bg); }
+    .btn-interested.active { background: var(--success); color: white; }
+
+    /* Timeline */
+    .timeline {
+        position: relative; 
+        padding-left: 2rem; 
+        margin: 2rem 0;
+        border-left: 3px solid var(--primary-light);
+    }
+    .timeline-item {
+        position: relative; 
+        margin-bottom: 2rem;
+        animation: slideInRight 0.3s ease;
+    }
+    .timeline-dot {
+        position: absolute; 
+        left: -2.15rem; 
+        top: 0;
+        width: 16px; 
+        height: 16px; 
+        border-radius: 50%;
+        background: white; 
+        border: 4px solid var(--primary);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition-all);
+    }
+    .timeline-item:hover .timeline-dot {
+        transform: scale(1.2);
+        border-color: var(--primary-dark);
+    }
+    .timeline-date { 
+        font-size: 0.7rem; 
+        color: var(--text-soft); 
+        margin-bottom: 0.5rem; 
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .timeline-content { 
+        background: var(--bg-body); 
+        padding: 1rem; 
+        border-radius: 12px; 
+        font-size: 0.85rem;
+        border: 1px solid var(--border-light);
+    }
+
+    /* Study Plans Modal - 3x BIGGER & RTL */
+    .study-plans-modal-large {
+        max-width: 95vw !important;
+        width: 1400px !important;
+        max-height: 90vh !important;
+    }
+
+    /* Filter Chips for Study Plans Modal */
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.5rem;
+        border-radius: 40px;
+        font-size: 1rem;
+        font-weight: 600;
+        background: white;
+        border: 2px solid var(--border-light);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: var(--transition-all);
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .filter-chip i {
+        font-size: 1rem;
+    }
+    
+    .filter-chip:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .filter-chip.active {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-color: var(--primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    /* Quick Ref Chips */
+    .quick-ref-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        border-radius: 40px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border-light);
+        color: var(--text-main);
+        cursor: pointer;
+        transition: var(--transition-all);
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .quick-ref-chip:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .quick-ref-chip i {
+        color: #f7b731;
+    }
+    
+    /* Study Plan Card - Larger */
+    .study-plan-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid var(--border-light);
+        transition: var(--transition-smooth);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .study-plan-card:hover {
+        transform: translateY(-6px);
+        box-shadow: var(--shadow-xl);
+        border-color: #f7b731;
+    }
+    
+    .plan-card-header {
+        padding: 1.5rem 1.5rem 1rem;
+        border-bottom: 2px dashed #f0e7dd;
+    }
+    
+    .pain-point-tag {
+        display: inline-block;
+        background: linear-gradient(135deg, #1e2b3c 0%, #2c3e50 100%);
+        color: white;
+        padding: 0.4rem 1.25rem;
+        border-radius: 40px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        box-shadow: 0 3px 0 #0f171e;
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .entry-question-text {
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1.3;
+        color: #1e2b3c;
+        margin-bottom: 0.5rem;
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .plan-features {
+        padding: 1.25rem 1.5rem;
+        flex: 1;
+    }
+    
+    .feature-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #f5f0eb;
+    }
+    
+    .feature-row:last-child {
+        border-bottom: none;
+    }
+    
+    .feature-icon-small {
+        width: 40px;
+        height: 40px;
+        background: #fdefd4;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #c9862b;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    
+    .feature-content {
+        flex: 1;
+    }
+    
+    .feature-title {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #0f1e2c;
+        margin-bottom: 0.25rem;
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .feature-desc-small {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .script-box {
+        margin: 0 1.5rem 1.5rem;
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #fcf7f2 0%, #fff8f0 100%);
+        border-radius: 20px;
+        border-right: 6px solid #f7b731;
+        cursor: pointer;
+        transition: var(--transition-all);
+        position: relative;
+    }
+    
+    .script-box:hover {
+        background: linear-gradient(135deg, #fff3e6 0%, #ffe8d4 100%);
+        transform: scale(1.02);
+    }
+    
+    .script-box:active {
+        transform: scale(0.99);
+    }
+    
+    .script-label-small {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #a4711e;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .script-text {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: #1e2b3c;
+        font-weight: 500;
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .copy-indicator {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+        color: var(--success);
+        font-size: 0.85rem;
+        font-family: var(--font-arabic), sans-serif;
+    }
+    
+    .script-box:hover .copy-indicator {
+        opacity: 0.8;
+    }
+    
+    .study-toast {
+        background: linear-gradient(135deg, #1e2b3c 0%, #2c3e50 100%);
+        color: white;
+        border-right: 5px solid #f7b731;
+    }
+    
+    .study-toast i {
+        color: #f7b731;
+    }
+
+    /* RTL Modal Header */
+    .modal-header-rtl {
+        padding: 2rem 2.5rem;
+        border-bottom: 2px solid var(--border-light);
+        background: linear-gradient(135deg, var(--surface-glass-dark) 0%, rgba(255,255,255,0.95) 100%);
+        backdrop-filter: blur(20px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Animations */
+    @keyframes slideUpFade {
+        from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideInRow {
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+
+    /* Toast */
+    .toast-container {
+        position: fixed; 
+        bottom: 2rem; 
+        right: 2rem; 
+        z-index: 200;
+        display: flex; 
+        flex-direction: column; 
+        gap: 0.75rem;
+    }
+    .toast {
+        background: var(--surface-glass-dark);
+        backdrop-filter: blur(20px);
+        padding: 1rem 1.5rem; 
+        border-radius: 16px;
+        box-shadow: var(--shadow-xl); 
+        display: flex; 
+        align-items: center; 
+        gap: 1rem;
+        animation: slideInRight 0.3s ease-out; 
+        min-width: 360px;
+        border-left: 5px solid var(--primary);
+        border: 1px solid rgba(255,255,255,0.8);
+        font-weight: 500;
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast i { font-size: 1.25rem; }
+
+    /* Loading Skeleton */
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite;
+        border-radius: var(--radius-xs);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-soft);
+        animation: fadeIn 0.4s ease;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.3);
+        backdrop-filter: blur(8px);
+        z-index: 150;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease;
+    }
+    .modal-content {
+        background: var(--surface-glass-dark);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        width: 450px;
+        max-width: 90%;
+        animation: slideUpFade 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.8);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .workspace { 
+            grid-template-columns: 1fr; 
+            height: auto; 
+        }
+        .sidebar { 
+            position: fixed; 
+            height: 100%; 
+            transform: translateX(-100%); 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: var(--shadow-xl);
+        }
+        .sidebar.open { 
+            transform: translateX(0); 
+        }
+        .menu-toggle { 
+            display: block !important; 
+        }
+        .top-bar {
+            padding: 0 1.5rem;
+        }
+        .filter-bar {
+            flex-direction: column;
+        }
+        .study-plans-modal-large {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+    }
+
+    .menu-toggle { 
+        display: none; 
+        font-size: 1.25rem; 
+        cursor: pointer; 
+        color: var(--text-muted); 
+        margin-right: 1rem;
+        transition: color 0.2s;
+    }
+    .menu-toggle:hover {
+        color: var(--primary);
+    }
+
+    /* Avatar */
+    .avatar {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition-smooth);
+        cursor: default;
+    }
+    .avatar:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        background: var(--bg-body);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+    }
+    .quick-stat-item {
+        text-align: center;
+    }
+    .quick-stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    .quick-stat-label {
+        font-size: 0.7rem;
+        color: var(--text-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Select Dropdown */
+    .select-filter {
+        border: 2px solid var(--border-light);
+        padding: 0.5rem 2rem 0.5rem 1rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        background: white;
+        color: var(--text-main);
+        font-weight: 500;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        transition: var(--transition-all);
+    }
+    .select-filter:hover {
+        border-color: var(--border);
+    }
+    .select-filter:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Textarea */
+    textarea.input-field {
+        resize: vertical;
+        min-height: 80px;
+        padding: 0.75rem;
+    }
+
+    /* Team Performance Container */
+    #teamPerformanceContainer {
+        display: block;
+    }
+
+    /* RTL Search Input */
+    .rtl .input-icon {
+        left: auto;
+        right: 1rem;
+    }
+    .rtl .input-field {
+        padding: 0.75rem 2.75rem 0.75rem 1rem;
+        text-align: right;
+    }
+</style>
+
+<!-- Login View -->
+<div id="loginView" class="login-screen">
+    <div class="login-card">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 18px; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.75rem; box-shadow: var(--shadow-lg);">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <h1 style="font-family: var(--font-display); font-weight: 800; font-size: 1.75rem; color: var(--text-main);">SalesFlow</h1>
+            <p style="color: var(--text-muted); margin-top: 0.35rem; font-size: 0.9rem;">Welcome back! Please login to continue.</p>
+        </div>
+        
+        <div id="loginError" class="hidden" style="background: var(--danger-bg); color: var(--danger); padding: 0.75rem; border-radius: 12px; margin-bottom: 1rem; font-size: 0.875rem; font-weight: 500; border: 1px solid var(--danger-bg);"></div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div>
+                <label class="text-xs font-bold text-muted" style="margin-bottom: 0.35rem; display: block; letter-spacing: 0.05em;">EMAIL ADDRESS</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" id="email" class="input-field" placeholder="name@company.com" style="padding-left: 2.75rem;">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-muted" style="margin-bottom: 0.35rem; display: block; letter-spacing: 0.05em;">PASSWORD</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="password" class="input-field" placeholder="••••••••" style="padding-left: 2.75rem;">
+                </div>
+            </div>
+            <button id="loginBtn" class="btn btn-primary w-full" style="height: 48px; font-size: 0.95rem;">
+                Sign In <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- App View -->
+<div id="appView" class="app-layout hidden">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem;">
+            <div style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; box-shadow: var(--shadow-md);">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <span style="font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; color: var(--text-main);">SalesFlow</span>
+        </div>
+
+        <nav style="flex: 1;">
+            <div class="nav-link active" onclick="App.switchView('dashboard')">
+                <i class="fas fa-th-large"></i> Dashboard
+            </div>
+            <div class="nav-link" id="teamPerformanceLink" style="display: none;" onclick="App.switchView('teamPerformance')">
+                <i class="fas fa-user-tie"></i> Team Performance
+            </div>
+            <div class="nav-link" id="treasuryLink" onclick="App.switchView('treasury')">
+                <i class="fas fa-receipt"></i> Treasury
+            </div>
+        </nav>
+
+        <div style="margin-bottom: 1rem; padding: 0 0.5rem;">
+            <div id="userRoleBadge" class="role-badge role-agent" style="display: inline-flex;">
+                <i class="fas fa-user"></i> Agent
+            </div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, var(--bg-body) 0%, #ffffff 100%); padding: 1.25rem; border-radius: 16px; margin-top: auto; border: 1px solid var(--border-light);">
+            <i class="fas fa-quote-left" style="color: var(--primary-light); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;"></i>
+            <p id="sidebarQuote" style="font-size: 0.85rem; font-style: italic; color: var(--text-main); line-height: 1.5; font-weight: 500;">
+                "Success is not final, failure is not fatal..."
+            </p>
+            <div style="font-size: 0.7rem; color: var(--text-soft); margin-top: 1rem; text-align: right; font-weight: 600;">- Daily Wisdom</div>
+        </div>
+
+        <button id="logoutBtn" class="btn btn-ghost w-full" style="justify-content: flex-start; margin-top: 1.5rem; color: var(--danger); padding: 0.85rem;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-area">
+        <!-- Top Header -->
+        <header class="top-bar">
+            <div class="flex items-center">
+                <i class="fas fa-bars menu-toggle" id="menuToggle"></i>
+                <div class="input-wrapper" style="width: 380px;">
+                    <i class="fas fa-search input-icon"></i>
+                    <input type="text" id="globalSearch" class="input-field" placeholder="Search leads..." style="padding-left: 2.75rem;">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- Study Plans Button -->
+                <button class="btn btn-icon btn-ghost" id="studyPlansBtn" title="خطط الدراسة (حل مشكلة العميل يشتري خدمتك)">
+                    <i class="fas fa-microphone-alt" style="color: #f7b731; font-size: 1.1rem;"></i>
+                </button>
+                <!-- Course Info Button -->
+                <button class="btn btn-icon btn-ghost" id="courseInfoBtn" title="Course Info">
+                    <i class="fas fa-graduation-cap text-primary" style="font-size: 1.1rem;"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div style="text-align: right;" class="hidden-mobile">
+                        <div id="headerUserName" class="font-bold text-sm">User</div>
+                        <div id="headerUserRole" class="text-xs text-muted">Role</div>
+                    </div>
+                    <div class="avatar" id="headerAvatar">U</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-scroll" id="mainContent">
+            <!-- Stats Row -->
+            <section class="stats-grid">
+                <div class="card stat-card">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%); color: var(--primary);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <h2 id="statTotal" class="font-bold" style="font-size: 1.75rem; color: var(--text-main);">0</h2>
+                        <p class="text-xs text-muted font-bold uppercase" style="letter-spacing: 0.05em;">Total Leads</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, var(--warning-bg) 0%, #ffffff 100%); color: var(--warning);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <h2 id="statActive" class="font-bold" style="font-size: 1.75rem; color: var(--text-main);">0</h2>
+                        <p class="text-xs text-muted font-bold uppercase" style="letter-spacing: 0.05em;">Pending Action</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, var(--success-bg) 0%, #ffffff 100%); color: var(--success);">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h2 id="statWon" class="font-bold" style="font-size: 1.75rem; color: var(--text-main);">0</h2>
+                        <p class="text-xs text-muted font-bold uppercase" style="letter-spacing: 0.05em;">Deals Won</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workspace -->
+            <div class="workspace" id="workspace">
+                <!-- Left: List -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <div class="panel-header">
+                        <span class="panel-title"><i class="fas fa-list-ul" style="margin-right: 0.5rem; color: var(--primary);"></i>Leads List</span>
+                        <div class="flex items-center gap-2">
+                            <select id="filterStatus" class="select-filter">
+                                <option value="">All Status</option>
+                                <option value="new">New</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="followup">Follow-up</option>
+                                <option value="potential">Potential</option>
+                                <option value="won">Won</option>
+                                <option value="lost">Lost</option>
+                            </select>
+                            <button id="clearFilters" class="btn btn-icon btn-ghost" title="Clear Filters"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div id="agentFilterBar" class="filter-bar" style="padding: 1rem 1.5rem; background: rgba(255,255,255,0.5); border-bottom: 1px solid var(--border-light); display: none;">
+                        <div class="filter-group">
+                            <span class="filter-label"><i class="fas fa-user-tie"></i> Sales Agent</span>
+                            <select id="agentFilter" class="select-filter" style="width: 200px;">
+                                <option value="">All Agents</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-head">
+                        <div><i class="fas fa-user" style="margin-right: 0.5rem;"></i>Lead Name</div>
+                        <div>Status</div>
+                        <div>Priority</div>
+                        <div>Assigned To</div>
+                    </div>
+
+                    <div class="panel-body" id="leadsListContainer">
+                        <div id="tableSkeleton">
+                            <div class="table-row"><div class="skeleton" style="height: 20px; width: 60%;"></div><div class="skeleton" style="height: 20px; width: 40%;"></div><div class="skeleton" style="height: 20px; width: 30%;"></div><div class="skeleton" style="height: 20px; width: 50%;"></div></div>
+                            <div class="table-row"><div class="skeleton" style="height: 20px; width: 50%;"></div><div class="skeleton" style="height: 20px; width: 40%;"></div><div class="skeleton" style="height: 20px; width: 30%;"></div><div class="skeleton" style="height: 20px; width: 40%;"></div></div>
+                            <div class="table-row"><div class="skeleton" style="height: 20px; width: 70%;"></div><div class="skeleton" style="height: 20px; width: 40%;"></div><div class="skeleton" style="height: 20px; width: 30%;"></div><div class="skeleton" style="height: 20px; width: 60%;"></div></div>
+                        </div>
+                        <div id="leadsTableBody"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Inspector -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <div class="panel-header">
+                        <span class="panel-title"><i class="fas fa-info-circle" style="margin-right: 0.5rem; color: var(--primary);"></i>Lead Inspector</span>
+                        <span id="inspectorStatusBadge" class="badge badge-new">New</span>
+                    </div>
+                    <div class="panel-body" id="inspectorBody">
+                        <div class="empty-state">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <p class="text-sm">Select a lead to view details</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Receipt Issue Modal -->
+<div id="receiptModal" class="hidden modal-overlay">
+    <div class="modal-content" style="max-width: 560px; max-height: 90vh; overflow-y: auto;">
+        <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--surface-glass-dark); backdrop-filter: blur(20px); z-index: 10;">
+            <h3 class="font-bold text-lg" style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-receipt" style="color: var(--primary);"></i>
+                إصدار إيصال جديد
+            </h3>
+            <i class="fas fa-times" onclick="Treasury.closeReceiptModal()" style="cursor: pointer; font-size: 1.1rem; color: var(--text-muted);"></i>
+        </div>
+        <div style="padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem;">
+            <div>
+                <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">اسم العميل</label>
+                <input type="text" id="receiptClientName" class="input-field" placeholder="اسم العميل" style="padding:.75rem 1rem;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div>
+                    <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">المبلغ (ج.م)</label>
+                    <input type="number" id="receiptAmount" class="input-field" placeholder="0.00" min="0" step="0.01" style="padding:.75rem 1rem;">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">نوع الخدمة</label>
+                    <select id="receiptService" class="select-filter" style="width:100%; padding:.75rem 2rem .75rem 1rem; border-radius:var(--radius-md); border:2px solid var(--border-light); font-size:.95rem;">
+                        <option value="course">كورس</option>
+                        <option value="extra_sessions">حصص إضافية</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">ملاحظات</label>
+                <textarea id="receiptNotes" class="input-field" rows="3" placeholder="أي ملاحظات إضافية..." style="padding:.75rem; resize:vertical;"></textarea>
+            </div>
+            <div style="background:linear-gradient(135deg,#f0fdf4 0%,#fff 100%); border:1px solid #bbf7d0; border-radius:var(--radius-md); padding:1rem; direction:rtl; max-height:200px; overflow-y:auto;">
+                <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.75rem;">
+                    <i class="fas fa-file-contract" style="color:var(--success);"></i>
+                    <strong style="font-size:.85rem;">الشروط والأحكام</strong>
+                </div>
+                <div style="font-size:.78rem; color:var(--text-muted); line-height:1.8; font-family:var(--font-arabic);">
+                    <p style="margin-bottom:.5rem;"><strong>١. سياسة الدفع:</strong> يُسدَّد المبلغ الكامل عند التسجيل ولا يُرد في أي حال من الأحوال بعد بدء الخدمة.</p>
+                    <p style="margin-bottom:.5rem;"><strong>٢. الاستخدام الشخصي:</strong> الاشتراك شخصي ولا يجوز نقله أو مشاركته مع أي طرف آخر.</p>
+                    <p style="margin-bottom:.5rem;"><strong>٣. مدة الخدمة:</strong> تبدأ مدة الاشتراك من تاريخ التفعيل وتنتهي وفقًا للباقة المختارة دون إمكانية التمديد المجاني.</p>
+                    <p style="margin-bottom:.5rem;"><strong>٤. الحصص الإضافية:</strong> يجب حجز الحصص الإضافية مسبقًا وفق الجدول الزمني المتاح، ولا يُعوَّض عن الحصص الملغاة بإشعار أقل من 24 ساعة.</p>
+                    <p style="margin-bottom:.5rem;"><strong>٥. المحتوى الرقمي:</strong> جميع المواد التعليمية محمية بحقوق الملكية الفكرية ولا يُسمح بنسخها أو توزيعها.</p>
+                    <p style="margin-bottom:.5rem;"><strong>٦. تعديل الخدمة:</strong> تحتفظ الشركة بحق تعديل جدول الحصص أو محتوى الكورس مع إخطار الطلاب مسبقًا.</p>
+                    <p style="margin-bottom:.5rem;"><strong>٧. السلوك والانضباط:</strong> يلتزم الطالب بقواعد الاحترام المتبادل، وتحتفظ الشركة بحق إيقاف الخدمة في حالة الإخلال بذلك دون استرداد.</p>
+                    <p><strong>٨. الموافقة:</strong> بدفع المبلغ المذكور في هذا الإيصال يُقرّ العميل بقراءة هذه الشروط والموافقة عليها كاملةً.</p>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:.5rem;">
+                <input type="checkbox" id="receiptTermsCheck" style="width:18px; height:18px; cursor:pointer; accent-color:var(--primary);">
+                <label for="receiptTermsCheck" style="font-size:.85rem; cursor:pointer;">أوافق على الشروط والأحكام</label>
+            </div>
+            <button class="btn btn-primary w-full" style="height:48px;" onclick="Treasury.issueReceipt()">
+                <i class="fas fa-receipt"></i> إصدار الإيصال
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt View/Print Modal -->
+<div id="receiptViewModal" class="hidden modal-overlay">
+    <div class="modal-content" style="max-width:560px; max-height:90vh; overflow-y:auto;">
+        <div style="padding:1.25rem 1.5rem; border-bottom:2px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:var(--surface-glass-dark); backdrop-filter:blur(20px); z-index:10;">
+            <h3 class="font-bold" style="display:flex; align-items:center; gap:.5rem;">
+                <i class="fas fa-file-invoice-dollar" style="color:var(--success);"></i> إيصال رسمي
+            </h3>
+            <div style="display:flex; gap:.5rem; align-items:center;" id="receiptViewModalActions">
+                <button class="btn btn-primary" onclick="Treasury.printReceipt()"><i class="fas fa-print"></i> طباعة</button>
+                <i class="fas fa-times" onclick="document.getElementById('receiptViewModal').classList.add('hidden')" style="cursor:pointer; font-size:1.1rem; color:var(--text-muted);"></i>
+            </div>
+        </div>
+        <div id="receiptPrintArea" style="padding:2rem; direction:rtl; font-family:var(--font-arabic);"></div>
+    </div>
+</div>
+
+<!-- Edit Receipt Modal (Owner only) -->
+<div id="editReceiptModal" class="hidden modal-overlay">
+    <div class="modal-content" style="max-width: 520px; max-height: 90vh; overflow-y: auto;">
+        <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--surface-glass-dark); backdrop-filter: blur(20px); z-index: 10;">
+            <h3 class="font-bold text-lg" style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-pen-to-square" style="color: var(--warning);"></i>
+                تعديل الإيصال
+            </h3>
+            <i class="fas fa-times" onclick="document.getElementById('editReceiptModal').classList.add('hidden')" style="cursor: pointer; font-size: 1.1rem; color: var(--text-muted);"></i>
+        </div>
+        <div style="padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem;">
+            <input type="hidden" id="editReceiptId">
+            <div>
+                <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">اسم العميل</label>
+                <input type="text" id="editReceiptClientName" class="input-field" placeholder="اسم العميل" style="padding:.75rem 1rem;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div>
+                    <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">المبلغ (ج.م)</label>
+                    <input type="number" id="editReceiptAmount" class="input-field" placeholder="0.00" min="0" step="0.01" style="padding:.75rem 1rem;">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">نوع الخدمة</label>
+                    <select id="editReceiptService" class="select-filter" style="width:100%; padding:.75rem 2rem .75rem 1rem; border-radius:var(--radius-md); border:2px solid var(--border-light); font-size:.95rem;">
+                        <option value="course">كورس</option>
+                        <option value="extra_sessions">حصص إضافية</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-muted" style="display:block; margin-bottom:.35rem; letter-spacing:.05em;">ملاحظات</label>
+                <textarea id="editReceiptNotes" class="input-field" rows="3" placeholder="أي ملاحظات إضافية..." style="padding:.75rem; resize:vertical;"></textarea>
+            </div>
+            <div style="background:linear-gradient(135deg,#fef3c7 0%,#fff 100%); border:1px solid #fde68a; border-radius:var(--radius-md); padding:.85rem 1rem; display:flex; align-items:center; gap:.75rem;">
+                <i class="fas fa-triangle-exclamation" style="color:var(--warning); font-size:1.1rem;"></i>
+                <span style="font-size:.82rem; color:#92400e;">هذا الإجراء محجوز للمالك فقط. سيتم تسجيل التعديل في السجل.</span>
+            </div>
+            <div style="display:flex; gap:.75rem;">
+                <button class="btn btn-primary" style="flex:1; height:46px;" onclick="Treasury.saveEdit()">
+                    <i class="fas fa-floppy-disk"></i> حفظ التعديلات
+                </button>
+                <button class="btn btn-ghost" style="height:46px; border:1px solid var(--border);" onclick="document.getElementById('editReceiptModal').classList.add('hidden')">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal (Owner only) -->
+<div id="deleteReceiptModal" class="hidden modal-overlay">
+    <div class="modal-content" style="max-width: 420px;">
+        <div style="padding: 2rem; text-align: center; direction: rtl;">
+            <div style="width:64px; height:64px; background:var(--danger-bg); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem; font-size:1.75rem; color:var(--danger);">
+                <i class="fas fa-trash-can"></i>
+            </div>
+            <h3 class="font-bold" style="font-size:1.2rem; margin-bottom:.5rem;">تأكيد حذف الإيصال</h3>
+            <p class="text-muted text-sm" style="margin-bottom:.35rem;">هل أنت متأكد من حذف الإيصال رقم</p>
+            <p id="deleteReceiptNumLabel" class="font-bold" style="font-size:1rem; color:var(--danger); margin-bottom:1.5rem;"></p>
+            <p class="text-xs text-muted" style="margin-bottom:1.75rem; background:var(--danger-bg); padding:.75rem; border-radius:var(--radius-sm); border:1px solid var(--danger-bg);">
+                <i class="fas fa-circle-exclamation"></i> هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الإيصال نهائياً من قاعدة البيانات.
+            </p>
+            <input type="hidden" id="deleteReceiptId">
+            <div style="display:flex; gap:.75rem; justify-content:center;">
+                <button class="btn" style="background:var(--danger); color:white; height:44px; min-width:120px; box-shadow:0 4px 12px rgba(239,68,68,.3);" onclick="Treasury.confirmDelete()">
+                    <i class="fas fa-trash-can"></i> نعم، احذف
+                </button>
+                <button class="btn btn-ghost" style="height:44px; min-width:100px; border:1px solid var(--border);" onclick="document.getElementById('deleteReceiptModal').classList.add('hidden')">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Info Modal -->
+<div id="courseModal" class="hidden modal-overlay">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <div style="padding: 1.75rem; border-bottom: 2px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--surface-glass-dark); backdrop-filter: blur(20px); z-index: 10;">
+            <h3 class="font-bold text-lg" style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-graduation-cap" style="color: var(--primary);"></i>
+                ميزات الكورس
+            </h3>
+            <i class="fas fa-times btn-icon btn-ghost" onclick="document.getElementById('courseModal').classList.add('hidden')" style="cursor: pointer;"></i>
+        </div>
+        
+        <div style="padding: 1.75rem;">
+            <div style="background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%); padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; text-align: center; border: 1px solid var(--primary-light);">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">🎯</div>
+                <p style="font-size: 1rem; line-height: 1.6; color: var(--text-main); font-weight: 500; direction: rtl;">
+                    تمكن من اللغة الإنجليزية عن طريق الانغماس في اللغة
+                </p>
+                <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); margin-top: 1rem; direction: rtl;">
+                    الكورس ده فيه أكتر من 4000 كلمة و 2200 جملة في مواقف حياتية وحوالي 630 قصة. الكورس يقدر ينقل الطالب من المستوى المبتدئ لفوق المتوسط، بحيث يقدر يتكلم في أي موقف بيتعرض ليه ويتعامل معه بثقة.
+                </p>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #f3e8ff 0%, #ffffff 100%); padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; border: 1px solid #e9d5ff; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: var(--accent); opacity: 0.1; border-radius: 50%;"></div>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.75rem; box-shadow: var(--shadow-lg);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-weight: 800; font-size: 1.25rem; color: var(--accent);">قابل Hivy</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">مدرس الذكاء الاصطناعي الصوتي</p>
+                    </div>
+                </div>
+                <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-main); direction: rtl;">
+                    تحدث بالإنجليزي و Hivy يصححلك ويديك فيدباك بالعامية المصرية!
+                </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; direction: rtl;">
+                <div style="background: linear-gradient(135deg, var(--info-bg) 0%, #ffffff 100%); padding: 1rem; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--info);">4000+</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">كلمة</div>
+                </div>
+                <div style="background: linear-gradient(135deg, var(--warning-bg) 0%, #ffffff 100%); padding: 1rem; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--warning);">2200+</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">جملة حياتية</div>
+                </div>
+                <div style="background: linear-gradient(135deg, var(--success-bg) 0%, #ffffff 100%); padding: 1rem; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--success);">630+</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">قصة</div>
+                </div>
+            </div>
+
+            <h4 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-star" style="color: var(--warning);"></i>
+                ميزات الكورس
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="card" style="padding: 1rem; background: white;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #f3e8ff 0%, #ffffff 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.25rem;">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <span class="font-bold">مدرس الذكاء الاصطناعي Hivy</span>
+                    </div>
+                    <p class="text-xs text-muted" style="direction: rtl;">
+                        مدرس صوتي تفاعلي: تحدث بالانجليزي و Hivy يصححلك الأخطاء ويديك تعليقات فورية بالعامية المصرية زي ما تكون بتتكلم مع مدرس حقيقي.
+                    </p>
+                </div>
+
+                <div class="card" style="padding: 1rem; background: white;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <span class="font-bold">حصة فردية مع المدرس</span>
+                    </div>
+                    <p class="text-xs text-muted" style="direction: rtl;">
+                        في نهاية كل دورة تعلم، حصة برايفت (مدرس مع طالب) للمراجعة الختامية والتقييم.
+                    </p>
+                </div>
+
+                <div class="card" style="padding: 1rem; background: white;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--info-bg) 0%, #ffffff 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--info); font-size: 1.25rem;">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <span class="font-bold">قاموس متكامل</span>
+                    </div>
+                    <p class="text-xs text-muted" style="direction: rtl;">
+                        قاموس شامل مع التعريفات والنطق الصحيح وأمثلة الاستخدام لكل الكلمات.
+                    </p>
+                </div>
+
+                <div class="card" style="padding: 1rem; background: white;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--warning-bg) 0%, #ffffff 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--warning); font-size: 1.25rem;">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <span class="font-bold">مواقف حياتية</span>
+                    </div>
+                    <p class="text-xs text-muted" style="direction: rtl;">
+                        تعلم التعبيرات والعبارات لمواقف حياتية حقيقية هتواجهها فعلاً.
+                    </p>
+                </div>
+
+                <div class="card" style="padding: 1rem; background: white;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 1.25rem;">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <span class="font-bold">قصص قصيرة</span>
+                    </div>
+                    <p class="text-xs text-muted" style="direction: rtl;">
+                        قصص قصيرة شيقة بتجعل تعلم المفردات والقواعد طبيعي وممتع.
+                    </p>
+                </div>
+
+                <div class="card" style="padding: 1rem; background: white; grid-column: span 2;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem;">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span class="font-bold">خطة دراسة ذكية</span>
+                    </div>
+                    <p class="text-xs text-muted" style="direction: rtl;">
+                        خطة دراسة مخصصة بتتكيف مع تقدمك وتحافظ على استمرارك لتحقيق أهدافك.
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: center;">
+                <button class="btn btn-primary" onclick="document.getElementById('courseModal').classList.add('hidden')" style="padding: 0.75rem 2rem;">
+                    <i class="fas fa-check"></i>
+                    فهمت
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Study Plans Modal - 3x BIGGER & RTL -->
+<div id="studyPlansModal" class="hidden modal-overlay">
+    <div class="modal-content study-plans-modal-large rtl" style="overflow: hidden; display: flex; flex-direction: column;">
+        <!-- Modal Header RTL -->
+        <div class="modal-header-rtl">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.75rem; box-shadow: var(--shadow-lg);">
+                    <i class="fas fa-microphone-alt"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold" style="font-size: 2rem; display: flex; align-items: center; gap: 1rem;">
+                        🎯 خطط الدراسة
+                        <span style="background: linear-gradient(135deg, #f7b731 0%, #f5a623 100%); color: #1e2b3c; padding: 0.35rem 1.25rem; border-radius: 40px; font-size: 1rem; font-weight: 700;">حل مشكلة العميل يشتري خدمتك</span>
+                    </h3>
+                    <p class="text-muted" style="font-size: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-copy"></i> اضغط على أي سكريبت لنسخه واستخدامه مباشرة مع العميل
+                    </p>
+                </div>
+            </div>
+            <i class="fas fa-times btn-icon btn-ghost" onclick="StudyPlans.close()" style="cursor: pointer; font-size: 1.5rem;"></i>
+        </div>
+
+        <!-- Search & Filter Toolbar RTL -->
+        <div style="padding: 1.25rem 2.5rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border-light); display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <div class="input-wrapper rtl" style="flex: 2; min-width: 300px;">
+                <i class="fas fa-search input-icon" style="right: 1rem; left: auto;"></i>
+                <input type="text" id="studyPlanSearch" class="input-field" placeholder="ابحث عن مشكلة، حل، أو كلمة..." style="padding: 0.9rem 3rem 0.9rem 1rem; background: white; font-size: 1rem; text-align: right; font-family: var(--font-arabic);">
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <button class="filter-chip active" data-filter="all" onclick="StudyPlans.filter('all')">
+                    <i class="fas fa-layer-group"></i> الكل
+                </button>
+                <button class="filter-chip" data-filter="speaking" onclick="StudyPlans.filter('speaking')">
+                    <i class="fas fa-comment-dots"></i> تحدث
+                </button>
+                <button class="filter-chip" data-filter="confidence" onclick="StudyPlans.filter('confidence')">
+                    <i class="fas fa-shield-heart"></i> ثقة
+                </button>
+                <button class="filter-chip" data-filter="vocab" onclick="StudyPlans.filter('vocab')">
+                    <i class="fas fa-book"></i> مفردات
+                </button>
+            </div>
+            <div style="margin-right: auto;">
+                <span class="badge badge-potential" id="planCount" style="font-size: 1rem; padding: 0.5rem 1.25rem;">25 خطة</span>
+            </div>
+        </div>
+
+        <!-- Plans Grid Container - 3 columns for larger view -->
+        <div style="padding: 2rem 2.5rem; overflow-y: auto; flex: 1;" id="studyPlansGrid">
+            <!-- Dynamically populated -->
+        </div>
+
+        <!-- Quick Reference Footer RTL -->
+        <div style="padding: 1.25rem 2.5rem; border-top: 2px solid var(--border-light); background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <i class="fas fa-bolt" style="color: #f7b731; font-size: 1.2rem;"></i>
+                <span class="font-bold" style="font-size: 1.1rem;">مرجع سريع:</span>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <span class="quick-ref-chip" onclick="StudyPlans.copyQuickRef('مش معايا وقت')">
+                    <i class="fas fa-clock"></i> مش معايا وقت
+                </span>
+                <span class="quick-ref-chip" onclick="StudyPlans.copyQuickRef('جربت كل حاجة')">
+                    <i class="fas fa-redo-alt"></i> جربت كل حاجة
+                </span>
+                <span class="quick-ref-chip" onclick="StudyPlans.copyQuickRef('غالي')">
+                    <i class="fas fa-tag"></i> غالي
+                </span>
+                <span class="quick-ref-chip" onclick="StudyPlans.copyQuickRef('هابدأ بعدين')">
+                    <i class="fas fa-calendar"></i> هابدأ بعدين
+                </span>
+                <span class="quick-ref-chip" onclick="StudyPlans.copyQuickRef('أنا كبير على التعلم')">
+                    <i class="fas fa-user"></i> أنا كبير على التعلم
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { createClient } = supabase;
+    const sb = createClient('https://kbixfisflofmsulenfaf.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiaXhmaXNmbG9mbXN1bGVuZmFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxNTQ5NzQsImV4cCI6MjA4NzczMDk3NH0.XQH_Ras8sTotKH6wQCwg67S3F-k4_a9DHM9cJ52GgrQ', { auth: { persistSession: false } });
+
+    const state = { 
+        user: null, 
+        leads: [], 
+        agents: [],
+        callLogs: [],
+        currentLead: null, 
+        filter: { 
+            status: '', 
+            agent: '' 
+        },
+        search: '',
+        tempAction: null,
+        view: 'dashboard'
+    };
+    
+    const el = (id) => document.getElementById(id);
+
+    // --- Auth ---
+    const Auth = {
+        init() {
+            const sess = sessionStorage.getItem('sf_user');
+            if(sess) {
+                try {
+                    state.user = JSON.parse(sess);
+                    el('loginView').classList.add('hidden');
+                    App.init();
+                } catch (e) {
+                    sessionStorage.clear();
+                    el('loginView').classList.remove('hidden');
+                }
+            } else {
+                el('loginView').classList.remove('hidden');
+            }
+            
+            const loginBtn = el('loginBtn');
+            if (loginBtn) {
+                loginBtn.onclick = () => Auth.login();
+            }
+            
+            const logoutBtn = el('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.onclick = () => { 
+                    sessionStorage.clear(); 
+                    window.location.reload(); 
+                };
+            }
+            
+            const passwordInput = el('password');
+            if (passwordInput) {
+                passwordInput.onkeypress = (e) => {
+                    if (e.key === 'Enter') {
+                        Auth.login();
+                    }
+                };
+            }
+        },
+        
+        async login() {
+            const email = el('email')?.value || '';
+            const password = el('password')?.value || '';
+            
+            if(!email || !password) {
+                const loginError = el('loginError');
+                if (loginError) {
+                    loginError.textContent = "Email and password are required";
+                    loginError.classList.remove('hidden');
+                }
+                return;
+            }
+            
+            try {
+                const { data, error } = await sb.rpc('authenticate_user', { 
+                    p_email: email, 
+                    p_password: password 
+                });
+                
+                if (error) throw error;
+                
+                if (!data || !data.user_id) {
+                    throw new Error("Invalid email or password");
+                }
+                
+                state.user = { 
+                    id: data.user_id, 
+                    name: data.user_name, 
+                    role: data.user_role, 
+                    avatar: data.user_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) 
+                };
+                
+                sessionStorage.setItem('sf_user', JSON.stringify(state.user));
+                
+                // Set CRM session variables for RLS policies
+                try {
+                    await sb.rpc('set_crm_user', {
+                        user_id: state.user.id,
+                        user_role: state.user.role
+                    });
+                    console.log('CRM session variables set successfully');
+                } catch (err) {
+                    console.error('Failed to set CRM session variables:', err);
+                }
+                
+                const loginView = el('loginView');
+                if (loginView) {
+                    loginView.style.animation = 'fadeOut 0.3s ease forwards';
+                    setTimeout(() => {
+                        loginView.classList.add('hidden');
+                        App.init();
+                    }, 300);
+                } else {
+                    App.init();
+                }
+                
+            } catch(err) {
+                const loginError = el('loginError');
+                if (loginError) {
+                    loginError.textContent = err.message || 'Login failed';
+                    loginError.classList.remove('hidden');
+                }
+            }
+        }
+    };
+
+    // --- Application ---
+    const App = {
+        init() {
+            const appView = el('appView');
+            if (appView) {
+                appView.classList.remove('hidden');
+            }
+            
+            const headerUserName = el('headerUserName');
+            const headerUserRole = el('headerUserRole');
+            const headerAvatar = el('headerAvatar');
+            
+            if (headerUserName) headerUserName.textContent = state.user?.name || 'User';
+            if (headerUserRole) headerUserRole.textContent = state.user?.role?.toUpperCase() || 'AGENT';
+            if (headerAvatar) headerAvatar.textContent = state.user?.avatar || 'U';
+            
+            const roleBadge = el('userRoleBadge');
+            if (roleBadge) {
+                const role = state.user?.role || 'agent';
+                roleBadge.className = `role-badge role-${role}`;
+                const icon = role === 'owner' ? 'fa-crown' : role === 'manager' ? 'fa-user-tie' : 'fa-user';
+                roleBadge.innerHTML = `<i class="fas ${icon}"></i> ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+            }
+            
+            // Set CRM session variables for RLS policies (when restoring from session)
+            if (state.user?.id && state.user?.role) {
+                sb.rpc('set_crm_user', {
+                    user_id: state.user.id,
+                    user_role: state.user.role
+                }).then(() => {
+                    console.log('CRM session variables restored');
+                }).catch(err => {
+                    console.error('Failed to restore CRM session variables:', err);
+                });
+            }
+            
+            const teamPerfLink = el('teamPerformanceLink');
+            const agentFilterBar = el('agentFilterBar');
+            
+            if (state.user?.role === 'manager' || state.user?.role === 'owner') {
+                if (teamPerfLink) teamPerfLink.style.display = 'flex';
+                if (agentFilterBar) agentFilterBar.style.display = 'flex';
+            } else {
+                if (teamPerfLink) teamPerfLink.style.display = 'none';
+                if (agentFilterBar) agentFilterBar.style.display = 'none';
+            }
+            
+            this.loadAgents();
+            this.loadLeads();
+            this.loadCallLogs();
+            this.listeners();
+            this.startQuotes();
+            
+            state.view = 'dashboard';
+            const navLinks = document.querySelectorAll('.nav-link');
+            if (navLinks.length > 0) {
+                navLinks.forEach(n => n.classList.remove('active'));
+                navLinks[0].classList.add('active');
+            }
+        },
+        
+        listeners() {
+            const menuToggle = el('menuToggle');
+            if (menuToggle) {
+                menuToggle.onclick = () => {
+                    const sidebar = el('sidebar');
+                    if (sidebar) sidebar.classList.toggle('open');
+                };
+            }
+            
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024) {
+                    const sidebar = el('sidebar');
+                    const menuToggle = el('menuToggle');
+                    if (sidebar && menuToggle && 
+                        !sidebar.contains(e.target) && 
+                        !menuToggle.contains(e.target) &&
+                        sidebar.classList.contains('open')) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+            });
+            
+            let searchTimeout;
+            const globalSearch = el('globalSearch');
+            if (globalSearch) {
+                globalSearch.oninput = (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        state.search = e.target.value.toLowerCase();
+                        if (state.view === 'dashboard') {
+                            this.render();
+                        }
+                    }, 300);
+                };
+            }
+            
+            const filterStatus = el('filterStatus');
+            if (filterStatus) {
+                filterStatus.onchange = (e) => { 
+                    state.filter.status = e.target.value; 
+                    if (state.view === 'dashboard') {
+                        this.render(); 
+                    }
+                };
+            }
+            
+            const agentFilter = el('agentFilter');
+            if (agentFilter) {
+                agentFilter.onchange = (e) => {
+                    state.filter.agent = e.target.value;
+                    if (state.view === 'dashboard') {
+                        this.render();
+                    }
+                };
+            }
+            
+            const clearFilters = el('clearFilters');
+            if (clearFilters) {
+                clearFilters.onclick = () => {
+                    const filterStatus = el('filterStatus');
+                    const globalSearch = el('globalSearch');
+                    const agentFilter = el('agentFilter');
+                    
+                    if (filterStatus) filterStatus.value = ''; 
+                    if (globalSearch) globalSearch.value = '';
+                    if (agentFilter) agentFilter.value = '';
+                    
+                    state.filter = { status: '', agent: '' };
+                    state.search = ''; 
+                    
+                    if (state.view === 'dashboard') {
+                        this.render();
+                    }
+                };
+            }
+            
+            const courseInfoBtn = el('courseInfoBtn');
+            if (courseInfoBtn) {
+                courseInfoBtn.onclick = () => {
+                    const courseModal = el('courseModal');
+                    if (courseModal) courseModal.classList.remove('hidden');
+                };
+            }
+            
+            const studyPlansBtn = el('studyPlansBtn');
+            if (studyPlansBtn) {
+                studyPlansBtn.onclick = () => StudyPlans.open();
+            }
+            
+            const courseModal = el('courseModal');
+            if (courseModal) {
+                courseModal.onclick = (e) => {
+                    if (e.target === courseModal) {
+                        courseModal.classList.add('hidden');
+                    }
+                };
+            }
+        },
+
+        switchView(view) {
+            state.view = view;
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(n => n.classList.remove('active'));
+            
+            const treasuryContainer = document.getElementById('treasuryContainer');
+            if (treasuryContainer && view !== 'treasury') treasuryContainer.style.display = 'none';
+            
+            if (view === 'dashboard') {
+                navLinks[0]?.classList.add('active');
+                this.showDashboard();
+            } else if (view === 'teamPerformance') {
+                const teamPerfLink = document.getElementById('teamPerformanceLink');
+                if (teamPerfLink) teamPerfLink.classList.add('active');
+                this.renderTeamPerformance();
+            } else if (view === 'treasury') {
+                const treasuryLink = document.getElementById('treasuryLink');
+                if (treasuryLink) treasuryLink.classList.add('active');
+                Treasury.renderTreasury();
+            }
+        },
+
+        showDashboard() {
+            const workspace = el('workspace');
+            if (workspace) {
+                workspace.style.display = 'grid';
+            }
+            
+            const perfContainer = el('teamPerformanceContainer');
+            if (perfContainer) {
+                perfContainer.style.display = 'none';
+            }
+            
+            this.loadLeads();
+        },
+
+        async loadAgents() {
+            try {
+                const { data, error } = await sb
+                    .from('users')
+                    .select('id, name, role')
+                    .eq('role', 'agent');
+                
+                if (error) throw error;
+                
+                state.agents = data || [];
+                
+                const agentFilter = el('agentFilter');
+                if (agentFilter) {
+                    if (state.agents.length > 0) {
+                        const options = state.agents.map(agent => 
+                            `<option value="${agent.name}">${agent.name}</option>`
+                        ).join('');
+                        agentFilter.innerHTML = '<option value="">All Agents</option>' + options;
+                    } else {
+                        agentFilter.innerHTML = '<option value="">No Agents Found</option>';
+                    }
+                }
+            } catch(err) {
+                console.error('Error loading agents:', err);
+            }
+        },
+
+        async loadCallLogs() {
+            try {
+                const { data, error } = await sb
+                    .from('call_logs')
+                    .select('*, users(name, role)')
+                    .order('called_at', { ascending: false });
+                
+                if (error) throw error;
+                state.callLogs = data || [];
+            } catch(err) {
+                console.error('Error loading call logs:', err);
+            }
+        },
+
+        async loadLeads() {
+            const leadsTableBody = el('leadsTableBody');
+            const tableSkeleton = el('tableSkeleton');
+            
+            if (leadsTableBody) leadsTableBody.innerHTML = '';
+            if (tableSkeleton) tableSkeleton.classList.remove('hidden');
+
+            try {
+                let query = sb.from('leads').select('*').order('priority', { ascending: false });
+                
+                if (state.user?.role === 'agent') {
+                    query = query.eq('assigned_agent_id', state.user.id);
+                }
+                
+                const { data, error } = await query;
+                if(error) throw error;
+                
+                state.leads = data || [];
+                
+                this.animateNumber('statTotal', 0, state.leads.length);
+                this.animateNumber('statActive', 0, state.leads.filter(l => ['new','contacted','followup','potential'].includes(l.lead_status)).length);
+                this.animateNumber('statWon', 0, state.leads.filter(l => l.lead_status === 'won').length);
+                
+                this.render();
+            } catch(err) {
+                this.toast(err.message, 'error');
+            } finally {
+                if (tableSkeleton) tableSkeleton.classList.add('hidden');
+            }
+        },
+
+        animateNumber(elementId, start, end) {
+            const element = el(elementId);
+            if (!element) return;
+            
+            let current = start;
+            const duration = 500;
+            const stepTime = 10;
+            const steps = duration / stepTime;
+            const stepValue = (end - start) / steps;
+            
+            const timer = setInterval(() => {
+                current += stepValue;
+                if ((stepValue > 0 && current >= end) || (stepValue < 0 && current <= end)) {
+                    element.textContent = end;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.round(current);
+                }
+            }, stepTime);
+        },
+
+        render() {
+            let filteredLeads = state.leads;
+            
+            filteredLeads = filteredLeads.filter(l => {
+                const sMatch = state.search ? (l.name||'').toLowerCase().includes(state.search) : true;
+                const statusMatch = state.filter.status ? l.lead_status === state.filter.status : true;
+                const agentMatch = state.filter.agent ? l.assigned_agent === state.filter.agent : true;
+                return sMatch && statusMatch && agentMatch;
+            });
+
+            const html = filteredLeads.map(l => {
+                const sel = state.currentLead && state.currentLead.id === l.id ? 'selected' : '';
+                let stClass = l.lead_status === 'followup' ? 'badge-followup' : 
+                              l.lead_status === 'potential' ? 'badge-potential' : 
+                              `badge-${l.lead_status}`;
+                const prColor = l.priority >= 8 ? 'var(--danger)' : l.priority >= 5 ? 'var(--warning)' : 'var(--success)';
+                
+                return `
+                <div class="table-row ${sel}" onclick="App.select(${l.id})">
+                    <div>
+                        <div class="font-bold text-sm">${App.escapeHtml(l.name)}</div>
+                        <div class="text-xs text-muted">${l.phone || 'No phone'}</div>
+                    </div>
+                    <div><span class="badge ${stClass}">${l.lead_status}</span></div>
+                    <div style="font-weight:700; font-size:0.9rem; color:${prColor}">${l.priority}/10</div>
+                    <div class="text-xs text-muted">${l.assigned_agent || 'Unassigned'}</div>
+                </div>`;
+            }).join('');
+            
+            const leadsTableBody = el('leadsTableBody');
+            if (leadsTableBody) {
+                leadsTableBody.innerHTML = html || `<div class="empty-state"><i class="fas fa-search"></i><p>No leads found.</p></div>`;
+            }
+        },
+
+        escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        },
+
+        select(id) {
+            state.currentLead = state.leads.find(l => l.id === id);
+            this.render();
+            this.renderInspector();
+        },
+
+        renderInspector() {
+            const l = state.currentLead;
+            if(!l) return;
+
+            let statusClass = l.lead_status === 'followup' ? 'badge-followup' : 
+                              l.lead_status === 'potential' ? 'badge-potential' : 
+                              `badge-${l.lead_status}`;
+            
+            const inspectorStatusBadge = el('inspectorStatusBadge');
+            if (inspectorStatusBadge) {
+                inspectorStatusBadge.className = `badge ${statusClass}`;
+                inspectorStatusBadge.textContent = l.lead_status;
+            }
+
+            const isAgent = state.user?.role === 'agent';
+            const isManagerOrOwner = state.user?.role === 'manager' || state.user?.role === 'owner';
+            const isAssignedToCurrentAgent = isAgent && l.assigned_agent_id === state.user?.id;
+            
+            const leadLogs = state.callLogs.filter(log => log.lead_id === l.id).slice(0, 5);
+            
+            const timelineHtml = leadLogs.length > 0 ? 
+                `<div class="timeline">
+                    ${leadLogs.map(log => {
+                        const actionIcon = {
+                            'won': 'fa-trophy',
+                            'followup': 'fa-calendar-check',
+                            'noanswer': 'fa-phone-slash',
+                            'notinterested': 'fa-times-circle',
+                            'potential': 'fa-star'
+                        }[log.action] || 'fa-phone';
+                        
+                        const actionColor = {
+                            'won': 'var(--success)',
+                            'followup': 'var(--info)',
+                            'noanswer': 'var(--warning)',
+                            'notinterested': 'var(--danger)',
+                            'potential': 'var(--potential)'
+                        }[log.action] || 'var(--primary)';
+                        
+                        return `
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="border-color: ${actionColor};"></div>
+                            <div class="timeline-date">${new Date(log.called_at).toLocaleString()}</div>
+                            <div class="timeline-content">
+                                <i class="fas ${actionIcon}" style="color: ${actionColor}; margin-right: 0.5rem;"></i>
+                                <strong>${log.action}:</strong> ${log.comment || 'No notes'}
+                                <div class="text-xs text-muted" style="margin-top: 0.25rem;">
+                                    <i class="fas fa-user"></i> ${log.users?.name || 'Unknown'}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>` :
+                `<div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="border-color: var(--success);"></div>
+                        <div class="timeline-date">${new Date(l.created_at || Date.now()).toLocaleString()}</div>
+                        <div class="timeline-content">
+                            <i class="fas fa-user-plus" style="color: var(--success); margin-right: 0.5rem;"></i>
+                            Lead created. Assigned to ${l.assigned_agent || 'Queue'}.
+                        </div>
+                    </div>
+                </div>`;
+
+            const actionsHtml = (isAgent && isAssignedToCurrentAgent) ? `
+                <div style="margin-top: 2rem;">
+                    <label class="text-xs font-bold text-muted uppercase" style="display:block; margin-bottom: 1rem; letter-spacing: 0.05em;">
+                        <i class="fas fa-bolt" style="margin-right: 0.5rem;"></i>Quick Actions
+                    </label>
+                    <div class="action-grid">
+                        <div class="action-btn btn-follow" onclick="App.setAct('followup', this)">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Follow Up</span>
+                        </div>
+                        <div class="action-btn btn-notinterested" onclick="App.setAct('notinterested', this)">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Not Interested</span>
+                        </div>
+                        <div class="action-btn btn-won" onclick="App.setAct('won', this)">
+                            <i class="fas fa-trophy"></i>
+                            <span>Won Deal</span>
+                        </div>
+                        <div class="action-btn btn-noanswer" onclick="App.setAct('noanswer', this)">
+                            <i class="fas fa-phone-slash"></i>
+                            <span>No Answer</span>
+                        </div>
+                        <div class="action-btn btn-potential" onclick="App.setAct('potential', this)">
+                            <i class="fas fa-star"></i>
+                            <span>Potential</span>
+                        </div>
+                        <div class="action-btn btn-interested" onclick="App.setAct('interested', this)">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span>Interested</span>
+                        </div>
+                    </div>
+                    <div class="input-wrapper">
+                        <textarea id="noteInput" class="input-field" rows="3" placeholder="Add a note about this interaction..." style="padding: 0.75rem;"></textarea>
+                    </div>
+                    <button class="btn btn-primary w-full" style="margin-top: 1rem; height: 48px;" onclick="App.submit()">
+                        <i class="fas fa-save"></i> Save Activity
+                    </button>
+                    <button class="btn btn-ghost w-full" style="margin-top: .5rem; height: 44px; border:2px solid var(--success); color:var(--success);" onclick="Treasury.openReceiptModal(state.currentLead)">
+                        <i class="fas fa-receipt"></i> إصدار إيصال
+                    </button>
+                </div>
+            ` : (isAgent && !isAssignedToCurrentAgent) ? `
+                <div class="empty-state" style="margin-top: 2rem;">
+                    <i class="fas fa-lock"></i>
+                    <p>This lead is assigned to another agent</p>
+                    <p class="text-xs text-muted" style="margin-top: 0.5rem;">You can only modify leads assigned to you</p>
+                </div>
+            ` : isManagerOrOwner ? `
+                <div class="empty-state" style="margin-top: 2rem;">
+                    <i class="fas fa-chart-line"></i>
+                    <p>Manager/Owner View - Monitoring Mode</p>
+                    <p class="text-xs text-muted" style="margin-top: 0.5rem;">You can view all leads but cannot modify them</p>
+                </div>
+            ` : '';
+
+            const inspectorBody = el('inspectorBody');
+            if (inspectorBody) {
+                inspectorBody.innerHTML = `
+                    <div class="inspector-content">
+                        <div class="lead-profile">
+                            <div class="lead-avatar-lg">${l.name ? l.name.charAt(0) : '?'}</div>
+                            <h2 style="font-family: var(--font-display); font-weight: 700; margin-bottom: 0.5rem; font-size: 1.5rem;">${App.escapeHtml(l.name)}</h2>
+                            <div class="text-muted text-sm" style="margin-bottom: 1rem;">${l.phone || 'No Phone'}</div>
+                            <div class="quick-stats">
+                                <div class="quick-stat-item">
+                                    <div class="quick-stat-value">${l.priority}/10</div>
+                                    <div class="quick-stat-label">Priority</div>
+                                </div>
+                                <div class="quick-stat-item">
+                                    <div class="quick-stat-value">${l.assigned_agent || '—'}</div>
+                                    <div class="quick-stat-label">Agent</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+                                <button class="btn btn-ghost btn-icon" onclick="App.callLead('${l.phone}')" ${!l.phone ? 'disabled' : ''}>
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <label class="text-xs font-bold text-muted uppercase" style="display:block; margin-bottom: 1rem; letter-spacing: 0.05em;">
+                            <i class="fas fa-history" style="margin-right: 0.5rem;"></i>Activity Log
+                        </label>
+                        ${timelineHtml}
+                        
+                        ${actionsHtml}
+                    </div>
+                `;
+            }
+        },
+
+        async renderTeamPerformance() {
+            const workspace = el('workspace');
+            if (workspace) {
+                workspace.style.display = 'none';
+            }
+            
+            let perfContainer = el('teamPerformanceContainer');
+            if (!perfContainer) {
+                perfContainer = document.createElement('div');
+                perfContainer.id = 'teamPerformanceContainer';
+                perfContainer.className = 'workspace';
+                if (workspace && workspace.parentNode) {
+                    workspace.parentNode.insertBefore(perfContainer, workspace.nextSibling);
+                }
+            }
+            
+            perfContainer.style.display = 'block';
+            
+            perfContainer.innerHTML = `
+                <div class="card" style="padding: 2rem; text-align: center;">
+                    <div class="skeleton" style="height: 200px; width: 100%;"></div>
+                </div>
+            `;
+            
+            try {
+                await this.loadCallLogs();
+                await this.loadLeads();
+                
+                const teamMetrics = this.calculateTeamMetrics();
+                perfContainer.innerHTML = this.buildTeamPerformanceHTML(teamMetrics);
+                
+            } catch(err) {
+                this.toast('Error loading team performance: ' + err.message, 'error');
+            }
+        },
+
+        calculateTeamMetrics() {
+            const metrics = {
+                totalLeads: state.leads.length,
+                totalCalls: state.callLogs.length,
+                conversionRate: 0,
+                avgResponseTime: 'N/A',
+                agentPerformance: [],
+                statusBreakdown: {
+                    new: 0,
+                    contacted: 0,
+                    followup: 0,
+                    potential: 0,
+                    won: 0,
+                    lost: 0
+                },
+                recentActivity: state.callLogs.slice(0, 10),
+                topPerformers: []
+            };
+            
+            state.leads.forEach(lead => {
+                if (metrics.statusBreakdown.hasOwnProperty(lead.lead_status)) {
+                    metrics.statusBreakdown[lead.lead_status]++;
+                }
+            });
+            
+            const wonLeads = metrics.statusBreakdown.won;
+            const lostLeads = metrics.statusBreakdown.lost;
+            const totalClosed = wonLeads + lostLeads;
+            metrics.conversionRate = totalClosed > 0 ? Math.round((wonLeads / totalClosed) * 100) : 0;
+            
+            const agentStats = {};
+            state.agents.forEach(agent => {
+                agentStats[agent.name] = {
+                    name: agent.name,
+                    leads: 0,
+                    calls: 0,
+                    won: 0,
+                    lost: 0,
+                    potential: 0,
+                    lastActive: null
+                };
+            });
+            
+            state.leads.forEach(lead => {
+                if (lead.assigned_agent && agentStats[lead.assigned_agent]) {
+                    agentStats[lead.assigned_agent].leads++;
+                    if (lead.lead_status === 'won') agentStats[lead.assigned_agent].won++;
+                    if (lead.lead_status === 'lost') agentStats[lead.assigned_agent].lost++;
+                    if (lead.lead_status === 'potential') agentStats[lead.assigned_agent].potential++;
+                }
+            });
+            
+            state.callLogs.forEach(log => {
+                const agentName = log.users?.name;
+                if (agentName && agentStats[agentName]) {
+                    agentStats[agentName].calls++;
+                    if (!agentStats[agentName].lastActive || new Date(log.called_at) > new Date(agentStats[agentName].lastActive)) {
+                        agentStats[agentName].lastActive = log.called_at;
+                    }
+                }
+            });
+            
+            metrics.agentPerformance = Object.values(agentStats);
+            
+            metrics.topPerformers = metrics.agentPerformance
+                .filter(a => a.leads > 0)
+                .map(a => ({
+                    ...a,
+                    conversionRate: a.leads > 0 ? Math.round((a.won / a.leads) * 100) : 0
+                }))
+                .sort((a, b) => b.conversionRate - a.conversionRate)
+                .slice(0, 5);
+            
+            return metrics;
+        },
+
+        buildTeamPerformanceHTML(metrics) {
+            return `
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="card" style="padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-chart-line" style="color: var(--primary); margin-right: 0.75rem;"></i>
+                                    Team Performance Dashboard
+                                </h2>
+                                <p class="text-muted text-sm">
+                                    <i class="fas fa-calendar-alt"></i> 
+                                    Last 30 days · Updated ${new Date().toLocaleString()}
+                                </p>
+                            </div>
+                            ${state.user?.role === 'owner' ? `
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-ghost" onclick="App.exportTeamReport()">
+                                    <i class="fas fa-download"></i> Export Report
+                                </button>
+                                <button class="btn btn-primary" onclick="App.refreshTeamPerformance()">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="card stat-card">
+                            <div class="stat-icon-box" style="background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%); color: var(--primary);">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold" style="font-size: 1.75rem;">${metrics.totalLeads}</h2>
+                                <p class="text-xs text-muted font-bold uppercase">Total Leads</p>
+                            </div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="stat-icon-box" style="background: linear-gradient(135deg, var(--info-bg) 0%, #ffffff 100%); color: var(--info);">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold" style="font-size: 1.75rem;">${metrics.totalCalls}</h2>
+                                <p class="text-xs text-muted font-bold uppercase">Total Calls</p>
+                            </div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="stat-icon-box" style="background: linear-gradient(135deg, var(--success-bg) 0%, #ffffff 100%); color: var(--success);">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold" style="font-size: 1.75rem;">${metrics.conversionRate}%</h2>
+                                <p class="text-xs text-muted font-bold uppercase">Conversion Rate</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="card" style="padding: 1.5rem;">
+                            <h3 class="panel-title" style="margin-bottom: 1.5rem;">
+                                <i class="fas fa-chart-pie" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                                Lead Status Distribution
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                ${Object.entries(metrics.statusBreakdown).map(([status, count]) => {
+                                    const percentage = metrics.totalLeads > 0 ? Math.round((count / metrics.totalLeads) * 100) : 0;
+                                    const color = {
+                                        'new': 'var(--info)',
+                                        'contacted': 'var(--warning)',
+                                        'followup': 'var(--info)',
+                                        'potential': 'var(--potential)',
+                                        'won': 'var(--success)',
+                                        'lost': 'var(--danger)'
+                                    }[status] || 'var(--primary)';
+                                    
+                                    return `
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                            <span class="text-sm"><span class="badge badge-${status}">${status}</span></span>
+                                            <span class="font-bold">${count} (${percentage}%)</span>
+                                        </div>
+                                        <div style="height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="height: 100%; width: ${percentage}%; background: ${color}; border-radius: 4px; transition: width 0.3s ease;"></div>
+                                        </div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="card" style="padding: 1.5rem;">
+                            <h3 class="panel-title" style="margin-bottom: 1.5rem;">
+                                <i class="fas fa-star" style="color: var(--warning); margin-right: 0.5rem;"></i>
+                                Top Performing Agents
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                ${metrics.topPerformers.length > 0 ? metrics.topPerformers.map((agent, index) => `
+                                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-body); border-radius: 12px;">
+                                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                                        ${agent.name ? agent.name.charAt(0) : '?'}
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div class="font-bold">${agent.name}</div>
+                                        <div class="text-xs text-muted">${agent.calls} calls · ${agent.leads} leads</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div class="font-bold" style="color: var(--success);">${agent.conversionRate}%</div>
+                                        <div class="text-xs text-muted">${agent.won} won</div>
+                                    </div>
+                                </div>
+                                `).join('') : `
+                                <div class="empty-state">
+                                    <i class="fas fa-chart-line"></i>
+                                    <p>No performance data yet</p>
+                                </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 1.5rem;">
+                        <h3 class="panel-title" style="margin-bottom: 1.5rem;">
+                            <i class="fas fa-table" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Agent Performance Details
+                        </h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border-light);">
+                                        <th style="text-align: left; padding: 1rem 0.5rem;">Agent</th>
+                                        <th style="text-align: center; padding: 1rem 0.5rem;">Leads</th>
+                                        <th style="text-align: center; padding: 1rem 0.5rem;">Calls</th>
+                                        <th style="text-align: center; padding: 1rem 0.5rem;">Won</th>
+                                        <th style="text-align: center; padding: 1rem 0.5rem;">Lost</th>
+                                        <th style="text-align: center; padding: 1rem 0.5rem;">Potential</th>
+                                        <th style="text-align: center; padding: 1rem 0.5rem;">Conversion</th>
+                                        <th style="text-align: right; padding: 1rem 0.5rem;">Last Active</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${metrics.agentPerformance.length > 0 ? metrics.agentPerformance.map(agent => `
+                                    <tr style="border-bottom: 1px solid var(--border-light);">
+                                        <td style="padding: 1rem 0.5rem; font-weight: 600;">${agent.name}</td>
+                                        <td style="text-align: center; padding: 1rem 0.5rem;">${agent.leads}</td>
+                                        <td style="text-align: center; padding: 1rem 0.5rem;">${agent.calls}</td>
+                                        <td style="text-align: center; padding: 1rem 0.5rem; color: var(--success);">${agent.won}</td>
+                                        <td style="text-align: center; padding: 1rem 0.5rem; color: var(--danger);">${agent.lost}</td>
+                                        <td style="text-align: center; padding: 1rem 0.5rem; color: var(--potential);">${agent.potential || 0}</td>
+                                        <td style="text-align: center; padding: 1rem 0.5rem;">
+                                            <span class="badge ${agent.leads > 0 && (agent.won / agent.leads) > 0.3 ? 'badge-won' : 'badge-new'}">
+                                                ${agent.leads > 0 ? Math.round((agent.won / agent.leads) * 100) : 0}%
+                                            </span>
+                                        </td>
+                                        <td style="text-align: right; padding: 1rem 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                                            ${agent.lastActive ? new Date(agent.lastActive).toLocaleDateString() : 'Never'}
+                                        </td>
+                                    </tr>
+                                    `).join('') : `
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                            <i class="fas fa-info-circle"></i> No agent data available
+                                        </td>
+                                    </tr>
+                                    `}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 1.5rem;">
+                        <h3 class="panel-title" style="margin-bottom: 1.5rem;">
+                            <i class="fas fa-history" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Recent Team Activity
+                        </h3>
+                        <div class="timeline" style="max-height: 400px; overflow-y: auto;">
+                            ${metrics.recentActivity.length > 0 ? metrics.recentActivity.map(log => {
+                                const actionIcon = {
+                                    'won': 'fa-trophy',
+                                    'followup': 'fa-calendar-check',
+                                    'noanswer': 'fa-phone-slash',
+                                    'notinterested': 'fa-times-circle',
+                                    'potential': 'fa-star'
+                                }[log.action] || 'fa-phone';
+                                
+                                const actionColor = {
+                                    'won': 'var(--success)',
+                                    'followup': 'var(--info)',
+                                    'noanswer': 'var(--warning)',
+                                    'notinterested': 'var(--danger)',
+                                    'potential': 'var(--potential)'
+                                }[log.action] || 'var(--primary)';
+                                
+                                return `
+                                <div class="timeline-item">
+                                    <div class="timeline-dot" style="border-color: ${actionColor};"></div>
+                                    <div class="timeline-date">${new Date(log.called_at).toLocaleString()}</div>
+                                    <div class="timeline-content">
+                                        <i class="fas ${actionIcon}" style="color: ${actionColor}; margin-right: 0.5rem;"></i>
+                                        <strong>${log.users?.name || 'Unknown'}</strong> - ${log.action}
+                                        <div class="text-xs text-muted" style="margin-top: 0.25rem;">
+                                            ${log.comment || 'No notes'}
+                                        </div>
+                                    </div>
+                                </div>`;
+                            }).join('') : `
+                            <div class="empty-state">
+                                <i class="fas fa-clock"></i>
+                                <p>No recent activity</p>
+                            </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+
+        callLead(phone) {
+            if (phone) {
+                window.location.href = `tel:${phone}`;
+            } else {
+                this.toast('No phone number available', 'error');
+            }
+        },
+
+        setAct(act, btn) {
+            this.tempAction = act;
+            document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        },
+
+        async submit() {
+            if(!this.tempAction) {
+                this.toast('Please select an action first', 'error');
+                return;
+            }
+            
+            const note = el('noteInput')?.value || '';
+            
+            const statusMap = { 
+                'noanswer': 'new',
+                'followup': 'followup', 
+                'notinterested': 'lost',
+                'won': 'won',
+                'potential': 'potential',
+                'interested': 'contacted'
+            };
+            
+            const newStatus = statusMap[this.tempAction];
+            
+            if (!newStatus) {
+                this.toast('Invalid action selected', 'error');
+                return;
+            }
+            
+            const now = new Date().toISOString();
+
+            try {
+                const { error: leadError } = await sb
+                    .from('leads')
+                    .update({ 
+                        lead_status: newStatus, 
+                        last_action: this.tempAction,
+                        last_comment: note,
+                        last_comment_date: now,
+                        last_sales_agent: state.user.name
+                    })
+                    .eq('id', state.currentLead.id);
+                
+                if (leadError) throw leadError;
+                
+                const { error: logError } = await sb
+                    .from('call_logs')
+                    .insert([{ 
+                        lead_id: state.currentLead.id, 
+                        agent_id: state.user.id, 
+                        agent_name: state.user.name,
+                        action: this.tempAction, 
+                        comment: note, 
+                        called_at: now 
+                    }]);
+
+                if (logError) throw logError;
+
+                this.toast('Activity saved successfully!', 'success');
+                
+                await this.loadLeads();
+                await this.loadCallLogs();
+                
+                const updatedLead = state.leads.find(l => l.id === state.currentLead.id);
+                if (updatedLead) {
+                    state.currentLead = updatedLead;
+                    this.renderInspector();
+                }
+                
+                this.tempAction = null;
+                document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+                
+                const noteInput = el('noteInput');
+                if (noteInput) noteInput.value = '';
+                
+            } catch(e) {
+                console.error('Full error:', e);
+                this.toast('Error saving activity: ' + e.message, 'error');
+            }
+        },
+
+        toast(msg, type = 'success') {
+            const container = el('toastContainer');
+            if (!container) return;
+            
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'info' ? 'fa-info-circle' : 'fa-exclamation-circle';
+            const color = type === 'success' ? 'var(--success)' : type === 'info' ? 'var(--info)' : 'var(--danger)';
+            
+            t.innerHTML = `
+                <i class="fas ${icon}" style="color: ${color};"></i> 
+                <span style="flex: 1;">${msg}</span>
+                <i class="fas fa-times" style="cursor: pointer; opacity: 0.5; transition: opacity 0.2s;"></i>
+            `;
+            
+            const closeBtn = t.querySelector('.fa-times');
+            if (closeBtn) {
+                closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+                closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
+                closeBtn.onclick = () => t.remove();
+            }
+            
+            container.appendChild(t);
+            
+            setTimeout(() => {
+                if (t.parentNode) {
+                    t.style.animation = 'fadeOut 0.2s ease forwards';
+                    setTimeout(() => t.remove(), 200);
+                }
+            }, 4000);
+        },
+
+        startQuotes() {
+            const quotes = [
+                "Sales is not about selling, it's about building trust.",
+                "Your most unhappy customers are your greatest source of learning.",
+                "Make a customer, not a sale.",
+                "The best way to predict the future is to create it.",
+                "Success is where preparation and opportunity meet.",
+                "Every contact with a customer is an opportunity to exceed.",
+                "The harder you work, the luckier you get.",
+                "Quality means doing it right when no one is looking."
+            ];
+            
+            setInterval(() => {
+                const quote = quotes[Math.floor(Math.random() * quotes.length)];
+                const sidebarQuote = el('sidebarQuote');
+                if (sidebarQuote) {
+                    sidebarQuote.textContent = `"${quote}"`;
+                }
+            }, 8000);
+        },
+
+        exportTeamReport() {
+            this.toast('Preparing Excel report...', 'info');
+            
+            const leadsData = state.leads.map(lead => ({
+                Name: lead.name,
+                Phone: lead.phone,
+                Status: lead.lead_status,
+                Priority: lead.priority,
+                Assigned: lead.assigned_agent || 'Unassigned',
+                Created: lead.created_at ? new Date(lead.created_at).toLocaleDateString() : ''
+            }));
+
+            const callsData = state.callLogs.map(log => ({
+                Agent: log.users?.name || 'Unknown',
+                Action: log.action,
+                Comment: log.comment,
+                Date: new Date(log.called_at).toLocaleString()
+            }));
+
+            const wb = XLSX.utils.book_new();
+            
+            const leadsSheet = XLSX.utils.json_to_sheet(leadsData);
+            XLSX.utils.book_append_sheet(wb, leadsSheet, "Leads");
+            
+            const callsSheet = XLSX.utils.json_to_sheet(callsData);
+            XLSX.utils.book_append_sheet(wb, callsSheet, "Call Logs");
+            
+            const fileName = `Team_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            this.toast('Report exported successfully!', 'success');
+        },
+
+        refreshTeamPerformance() {
+            this.renderTeamPerformance();
+            this.toast('Team performance data refreshed', 'success');
+        }
+    };
+
+    // --- Study Plans Module - ALL 25 PLANS ---
+    const StudyPlans = {
+        plans: [],
+        filteredPlans: [],
+        currentFilter: 'all',
+        searchTerm: '',
+        
+        quickRefs: {
+            'مش معايا وقت': '20 دقيقة يومياً مع هايفي - أقل من حلقة مسلسل',
+            'جربت كل حاجة': 'مجرّبتش AI مع تصحيح فوري',
+            'غالي': 'قارن بـ 3 شهور تدريس خاص (15,000+ جنيه) - ده 1,600 بس',
+            'أنا كبير على التعلم': 'AI بتاعنا بيتكيف مع سرعتك - السن مش عائق',
+            'هابدأ بعدين': 'كل يوم تأخير هو يوم فرصة ضايعة - ابدأ النهاردة'
+        },
+        
+        init() {
+            this.plans = this.getPlansData();
+            this.filteredPlans = [...this.plans];
+            this.render();
+            if (!this._listenersAttached) {
+                this.setupListeners();
+                this._listenersAttached = true;
+            }
+        },
+        
+        getPlansData() {
+            return [
+                { id: 1, pain: "ضعف مهارات التحدث", question: "بتجمد لما تحتاج تتكلم إنجليزي؟", category: "speaking",
+                  features: [
+                      { icon: "fa-robot", title: "هايفي - مدرس AI صوتي", desc: "تتكلم براحتك من غير حد يحكم عليك - تدريب 24/7 مع تصحيح فوري" },
+                      { icon: "fa-list", title: "+4000 كلمة و 2200 جملة", desc: "عبارات جاهزة للاستخدام في محادثات حقيقية" },
+                      { icon: "fa-book-open", title: "630 قصة قصيرة", desc: "أنماط كلام طبيعية من خلال محتوى غامر" },
+                      { icon: "fa-chalkboard-user", title: "حصص فردية", desc: "تدريب مباشر مع مدرس حقيقي عشان تبني ثقتك" }
+                  ],
+                  script: "مع هايفي، مدرس AI الصوتي، تقدر تتدرب على الكلام في أي وقت من غير ما تحس بالإحراج. ال AI يصححلك فوراً بالعربي المصري فاهم بالظبط إيه اللي لازم تصلحه. كمان 2200 جملة للحياة اليومية معناها إنك مش هتتعطل عن الكلام. بعد شهرين، هتتعامل في المحادثات اليومية بثقة."
+                },
+                { id: 2, pain: "الترجمة الحرفية", question: "بتفكر بالعربي الأول وبعدين تترجم؟", category: "speaking",
+                  features: [
+                      { icon: "fa-water", title: "منهجية الغمر", desc: "تدرب دماغك يفكر مباشرة بالإنجليزي من خلال 630 قصة" },
+                      { icon: "fa-globe", title: "مواقف حياتية حقيقية", desc: "تعلم التعبيرات زي ما الناطقين الأصليين بيستخدموها" },
+                      { icon: "fa-diagram-project", title: "التعلم السياقي", desc: "الكلمات متعلمة جوا جمل، مش منعزلة" }
+                  ],
+                  script: "English Hive بيدرب دماغك يفكر بالإنجليزي، مش يترجم للإنجليزي. 630 قصة قصيرة بتغمرك في أنماط اللغة الطبيعية. بدل ما تترجم 'عندي موعد' كلمة بكلمة، هتقول 'I have an appointment' تلقائي لأنك شوفتها مستخدمة في سياقات كتير."
+                },
+                { id: 3, pain: "ضعف النطق", question: "الناس بتطلب منك تكرر كلامك؟", category: "speaking",
+                  features: [
+                      { icon: "fa-microphone", title: "هايفي مع التعرف على الصوت", desc: "بيكشف أخطاء النطق فوراً" },
+                      { icon: "fa-volume-high", title: "قاموس متكامل", desc: "نطق صوتي لكل الـ 4000+ كلمة" },
+                      { icon: "fa-user-check", title: "حصص فردية", desc: "المدرس بيصلح مشاكل النطق المحددة عندك" }
+                  ],
+                  script: "هايفي مش بس بيقولك غلط - بيوريك إزاي تصلح. ال AI بيتعرف على أخطاء النطق المحددة عندك ويرشدك للنطق الصحيح. مع القاموس المدمج، تقدر تسمع النطق الأصلي لكل كلمة. خلاص بقى التخمين."
+                },
+                { id: 4, pain: "ضعف مهارات الاستماع", question: "الناطقين الأصليين بيكونوا سريعين أوي؟", category: "speaking",
+                  features: [
+                      { icon: "fa-headphones", title: "630 قصة صوتية", desc: "بتدرب أذنك على أنماط الكلام الطبيعية" },
+                      { icon: "fa-tachometer-alt", title: "محادثات AI", desc: "سرعة متكيفة حسب مستواك" },
+                      { icon: "fa-people-group", title: "مواقف حياتية", desc: "تعرض لمختلف اللهجات والسرعات" }
+                  ],
+                  script: "ودانك محتاجة تدريب زي بقك بالظبط. 630 قصة كلها صوتية، بتزيد في التعقيد تدريجياً. هايفي بيتكلم بسرعتك ويتكيف مع تحسنك. بعد 3 شهور، هتفهم الناطقين الأصليين من غير ما تطلب منهم يبطؤوا."
+                },
+                { id: 5, pain: "التركيز الزائد على القواعد", question: "عارف قواعد بس مش عارف تتكلم؟", category: "confidence",
+                  features: [
+                      { icon: "fa-feather", title: "التعلم بالقصص", desc: "القواعد بتتمتص طبيعي من خلال السياق" },
+                      { icon: "fa-pen", title: "2200 جملة عملية", desc: "الاستخدام أولاً، القواعد تاني" },
+                      { icon: "fa-brain", title: "خطة دراسة ذكية", desc: "توازن بين كل المهارات" }
+                  ],
+                  script: "القواعد مهمة بس هي أداة مش هدف. English Hive بيعلم القواعد من خلال القصص والمحادثات الحقيقية. هتستخدم القواعد الصح طبيعي لأنك شوفتها شغالة في 630 سياق مختلف - مش عشان حفظت قاعدة."
+                },
+                { id: 6, pain: "قلة المفردات", question: "بتستخدم نفس الكلمات البسيطة على طول؟", category: "vocab",
+                  features: [
+                      { icon: "fa-database", title: "+4000 كلمة منتقاة", desc: "من المبتدئ لفوق المتوسط" },
+                      { icon: "fa-book", title: "قاموس متكامل", desc: "تعريفات، نطق، أمثلة" },
+                      { icon: "fa-tree", title: "قصص سياقية", desc: "الكلمات بتثبت لأنك بتستخدمها في قصص" }
+                  ],
+                  script: "4000 كلمة هي الرقم السحري للطلاقة اليومية. بس مش بنرميلك قواميس - كل كلمة بتظهر في 630 قصة فبتتعلمها في سياق. قاموسنا بيوريك إزاي تستخدم كل كلمة بالظبط. هتوسع مفرداتك 10 أضعاف أسرع من الطرق التقليدية."
+                },
+                { id: 7, pain: "الاعتماد على طرق تقليدية", question: "سنين دراسة في المدارس ومش نافعة؟", category: "confidence",
+                  features: [
+                      { icon: "fa-microchip", title: "تعلم مدعوم بالAI", desc: "تكنولوجيا متطورة، مش كتب" },
+                      { icon: "fa-baby", title: "منهجية الغمر", desc: "تعلم زي الطفل بيتعلم لغته الأولى" },
+                      { icon: "fa-sliders", title: "خطة متكيفة ذكية", desc: "مسار شخصي، مش واحد للكل" }
+                  ],
+                  script: "الطرق التقليدية فشلت معاك عشان مش مصممة للتواصل الحقيقي. English Hive بيستخدم AI والغمر - نفس التقنيات اللي بيستخدموها متعددو اللغات. مفيش كتب مملة. مفيش حفظ قواعد. بس إنجليزي حقيقي للحياة الحقيقية، متكيف مع سرعتك."
+                },
+                { id: 8, pain: "نقص الممارسة الواقعية", question: "بتتدرب على الإنجليزي بس في الفصول؟", category: "speaking",
+                  features: [
+                      { icon: "fa-briefcase", title: "وحدة المواقف الحياتية", desc: "مقابلات عمل، مطاعم، سفر، إلخ" },
+                      { icon: "fa-robot", title: "محادثات هايفي", desc: "تدرب على أي سيناريو 24/7" },
+                      { icon: "fa-users", title: "حصص فردية", desc: "تمثيل أدوار مع مدرسين حقيقيين" }
+                  ],
+                  script: "إنجليزي محتاجه للحياة الحقيقية، مش للفصول. الكورس بيغطي 90+ موقف حقيقي - من مقابلات العمل لطلب الأكل في الخارج. هايفي بيسمحلك تتدرب على السيناريوهات دي في أي وقت. لما تواجهها في الحقيقة، هتكون اتدربت عليها 100 مرة قبل كده."
+                },
+                { id: 9, pain: "ضعف مهارة الكتابة", question: "بتعاني في الإيميلات والرسايل؟", category: "vocab",
+                  features: [
+                      { icon: "fa-envelope", title: "2200 نمط جملة", desc: "قوالب لكل موقف" },
+                      { icon: "fa-paragraph", title: "تعلم بنية القصة", desc: "فهم تدفق النصوص" },
+                      { icon: "fa-pen-fancy", title: "تصحيح AI", desc: "هايفي بيصلح الكتابة كمان" }
+                  ],
+                  script: "الكتابة بتحسن لما تعرف الجمل إزاي بتترابط. 2200 نمط جملة بيدولك لبنات البناء لأي رسالة. من خلال 630 قصة، هتفهم بنية النص طبيعي. سواء رسالة واتساب أو إيميل شغل، هتكتب بثقة."
+                },
+                { id: 10, pain: "بطء الفهم", question: "دماغك بياخد وقت يفهم الإنجليزي؟", category: "speaking",
+                  features: [
+                      { icon: "fa-clock", title: "غمر يومي", desc: "السرعة بتيجي من التعرض المستمر" },
+                      { icon: "fa-chart-line", title: "تعقيد تدريجي للقصص", desc: "الدماغ بيتكيف تدريجياً" },
+                      { icon: "fa-calendar-check", title: "خطة دراسة ذكية", desc: "فترات مثلى للمسارات العصبية" }
+                  ],
+                  script: "البطء في الفهم بيحصل عشان مش بتستخدم الإنجليزي كفاية. خطة الدراسة الذكية بتضمن غمر يومي - 20-30 دقيقة بس بتدرب دماغك يعالج الإنجليزي أسرع. بعد أسبوع 4، هتلاحظ نفسك بتفهم من غير ترجمة واعية."
+                },
+                { id: 11, pain: "عدم الاستمرارية", question: "بتبدأ كورسات وبعدين تسيبها؟", category: "confidence",
+                  features: [
+                      { icon: "fa-bell", title: "خطة دراسة ذكية", desc: "تذكيرات متكيفة وتتبع التقدم" },
+                      { icon: "fa-hourglass-half", title: "جلسات قصيرة يومياً", desc: "20-30 دقيقة، مناسبة للناس المشغولة" },
+                      { icon: "fa-face-smile", title: "محتوى جذاب", desc: "القصص بتخليك ترجع تاني" }
+                  ],
+                  script: "الاستمرارية بتفشل لما التعلم يبقى عبء. خطة الدراسة الذكية بتبعتلك تذكيرات يومية متكيفة مع جدولك. 20 دقيقة بس مع هايفي أو قصة قصيرة - ممتع فعلاً، مش واجب مدرسي. آلاف الطلاب بيستمروا معانا عشان بيتناسب مع الحياة الحقيقية."
+                },
+                { id: 12, pain: "الخوف من الحكم الاجتماعي", question: "خايف تغلط قدام الناس؟", category: "confidence",
+                  features: [
+                      { icon: "fa-shield", title: "هايفي - منطقة من غير حكم", desc: "تتدرب لوحدك، تبني ثقتك الأول" },
+                      { icon: "fa-hand-holding-heart", title: "حصص فردية", desc: "مساحة آمنة مع مدرسين داعمين" },
+                      { icon: "fa-stairs", title: "تعرض تدريجي", desc: "ابدأ بـ AI، تقدم للتعامل البشري" }
+                  ],
+                  script: "الخوف بيوقف المتعلمين أكتر من الصعوبة نفسها. مع هايفي، تتدرب لوحدك الأول - محدش بيسمع غلطاتك غير ال AI اللي بيصلحلك بلطف بالعربي. لما تنضم للحصص الفردية، هتكون واثق أصلاً. بنبنيك في الخاص عشان تتألق في العام."
+                },
+                { id: 13, pain: "الفهم بدون القدرة على الرد", question: "بتفهم بس مش عارف ترد؟", category: "speaking",
+                  features: [
+                      { icon: "fa-comment", title: "تركيز على الكلام الفعال", desc: "هايفي بيأجبرك تنتج، مش تستقبل بس" },
+                      { icon: "fa-reply-all", title: "2200 نمط رد", desc: "ردود جاهزة للمواقف الشائعة" },
+                      { icon: "fa-clock-rotate-left", title: "تدريب محادثة فردي", desc: "تدريب الرد في الوقت الفعلي" }
+                  ],
+                  script: "الفهم سلبي، الكلام فعال. English Hive بيركز على الإنتاج. هايفي مش بيسمحلك تسمع بس - لازم ترد. 2200 نمط جملة مصممة خصيصاً كقوالب للرد. هتنتقل من 'أنا فاهم' لـ 'أنا عارف أرد' في أسابيع."
+                },
+                { id: 14, pain: "عدم ربط اللغة بالحياة اليومية", question: "الإنجليزي بيبقى منفصل عن عالمك الحقيقي؟", category: "confidence",
+                  features: [
+                      { icon: "fa-house", title: "مواقف حياتية", desc: "قابلة للتطبيق المباشر" },
+                      { icon: "fa-cart-shopping", title: "مفردات عملية", desc: "كلمات بتستخدمها فعلياً" },
+                      { icon: "fa-people-arrows", title: "قصص سياقية", desc: "شخصيات وأماكن مرتبطة بيك" }
+                  ],
+                  script: "الإنجليزي بيبقى قوي لما يكون جزء من حياتك، مش مادة بتدرسها. محتوانا بيعكس روتينك اليومي - الشغل، التسوق، العيلة، السوشيال ميديا. هتتدرب على عبارات هتستخدمها بكرة. اللغة تبطل 'أجنبية' وتبقى أداتك."
+                },
+                { id: 15, pain: "صعوبة تكوين الجمل", question: "عارف كلمات بس مش عارف تبني جمل؟", category: "speaking",
+                  features: [
+                      { icon: "fa-cubes", title: "2200 نمط جملة", desc: "ليغو جاهز لبناء أي جملة" },
+                      { icon: "fa-film", title: "الغمر بالقصص", desc: "630 مثال على البنية الصحيحة" },
+                      { icon: "fa-check-double", title: "تصحيح AI", desc: "هايفي بيصلح محاولاتك للجمل" }
+                  ],
+                  script: "الجمل بتتبنى من أنماط، مش بس كلمات. بنديك 2200 نمط جملة مجرب - اخلطهم وامزجهم لأي موقف. من خلال 630 قصة، هتستوعب إزاي الجمل الإنجليزية بتتدفق. هايفي بيصلح محاولاتك فوراً."
+                },
+                { id: 16, pain: "استهلاك المحتوى بدون تطبيق", question: "بتتفرج على فيديوهات بس مش بتتكلم؟", category: "confidence",
+                  features: [
+                      { icon: "fa-message", title: "هايفي - كلام إجباري", desc: "لازم تتكلم عشان تتقدم" },
+                      { icon: "fa-puzzle-piece", title: "تصميم التعلم الفعال", desc: "كل درس بيتطلب مشاركة" },
+                      { icon: "fa-user-tie", title: "حصص فردية", desc: "تطبيق إجباري مع المدرسين" }
+                  ],
+                  script: "التعلم السلبي بيديك إحساس حلو بس مش نتيجة. English Hive فعال - هايفي مش بيسمحلك تتفرج بس. لازم ترد، تتصحح، ترد تاني. منهجيتنا بتضمن تطبيق كل حاجة فوراً."
+                },
+                { id: 17, pain: "عدم وجود تصحيح", question: "بتتدرب من غير ما تعرف صح ولا غلط؟", category: "confidence",
+                  features: [
+                      { icon: "fa-bolt", title: "تصحيح فوري من هايفي", desc: "تصحيح فوري بالعربي المصري" },
+                      { icon: "fa-clipboard-list", title: "تقييم حصص فردية", desc: "تقييم خبير بشري" },
+                      { icon: "fa-chart-simple", title: "تتبع التقدم", desc: "مقاييس واضحة للتحسن" }
+                  ],
+                  script: "التدريب من غير تصحيح زي السواقة مع عينيك مغطيين. هايفي بيديك تصحيح فوري ومحدد بالعربي اللي تفهمه. مدرسينا بيدوا feedback مفصل في الحصص الفردية. هتعرف بالظبط إيه اللي لازم تصلحه وإزاي تصلحه."
+                },
+                { id: 18, pain: "ضعف الثقة بالنفس", question: "شاكك في قدراتك في الإنجليزي؟", category: "confidence",
+                  features: [
+                      { icon: "fa-trophy", title: "نجاحات متدرجة", desc: "انتصارات صغيرة بتبني الثقة يومياً" },
+                      { icon: "fa-hand-peace", title: "حصص فردية", desc: "تشجيع المدرس و validation" },
+                      { icon: "fa-chart-bar", title: "تقدم قابل للقياس", desc: "شوف تحسنك بشكل موضوعي" }
+                  ],
+                  script: "الثقة بتيجي من إثبات القدرة، مش تشجيع فاضي. خطة الدراسة الذكية بتديك انتصارات يومية صغيرة. بعد 3 شهور، هيكون معاك 90+ يوم إثبات إنك تقدر. الثقة هتبقى طبيعتك الجديدة."
+                },
+                { id: 19, pain: "عدم وضوح الهدف", question: "بتدرس من غير ما تعرف رايح على فين؟", category: "confidence",
+                  features: [
+                      { icon: "fa-map", title: "خطة دراسة ذكية", desc: "خريطة واضحة من أول يوم" },
+                      { icon: "fa-arrow-trend-up", title: "تدرج المستويات", desc: "مبتدئ → فوق المتوسط" },
+                      { icon: "fa-certificate", title: "شهادة إتمام", desc: "هدف ملموس تتحقق منه" }
+                  ],
+                  script: "من غير وجهة، أي طريق غلط. English Hive بيديك مسار واضح: 4000 كلمة، 2200 جملة، 630 قصة. هتبدأ عارف بالظبط فين هتوصل."
+                },
+                { id: 20, pain: "التعلم بطريقة واحدة بس", question: "بتمل من نفس الطريقة؟", category: "confidence",
+                  features: [
+                      { icon: "fa-table-cells-large", title: "تعلم متعدد الوسائط", desc: "AI، قصص، قاموس، حصص فردية" },
+                      { icon: "fa-music", title: "أنواع متنوعة المحتوى", desc: "صوتي، نصي، تفاعلي، مباشر" },
+                      { icon: "fa-sliders", title: "أساليب متكيفة", desc: "بيحول حسب اللي يناسبك" }
+                  ],
+                  script: "طريقة واحدة مش بتناسب حد. English Hive بيديك كل الوسائل - تتكلم مع AI، تقرأ قصص، تسمع صوت، تكتب ردود، تقابل مدرسين مباشر."
+                },
+                { id: 21, pain: "بفكر كتير عشان اعرف ارد", question: "دماغك بيفضى لما تحتاج ترد؟", category: "speaking",
+                  features: [
+                      { icon: "fa-gauge-high", title: "2200 نمط رد", desc: "ردود جاهزة، مفيش تفكير" },
+                      { icon: "fa-stopwatch", title: "تدريب السرعة مع هايفي", desc: "بيأجبرك ترد أسرع" },
+                      { icon: "fa-rotate", title: "تدريبات حياتية", desc: "التكرار بيخلي الرد تلقائي" }
+                  ],
+                  script: "التفكير الكتير بيقتل الطلاقة. بنديك 2200 نمط رد جاهز - مش هتحتاج تبني جمل من الصفر. هايفي بيتدرب معاك على السرعة عشان الردود تبقى تلقائية."
+                },
+                { id: 22, pain: "الاكسنت بتاعتي مش حلوة", question: "محرج من طريقة كلامك؟", category: "confidence",
+                  features: [
+                      { icon: "fa-waveform", title: "تدريب النطق مع هايفي", desc: "تقليل اللهجة من خلال التصحيح" },
+                      { icon: "fa-ear-listen", title: "تعرض صوتي أصلي", desc: "630 قصة بنطق native" },
+                      { icon: "fa-user-graduate", title: "تدريب حصص فردية", desc: "المدرس بيشتغل على الأصوات المحددة" }
+                  ],
+                  script: "لهجتك مش 'وحشة' - هي بس مش متدربة. هايفي بيكشف بالظبط إيه الأصوات اللي محتاجة شغل ويرشدك للنطق الأصلي."
+                },
+                { id: 23, pain: "عدم القدرة على حفظ الكلمات", question: "بتنسى المفردات فوراً؟", category: "vocab",
+                  features: [
+                      { icon: "fa-tree", title: "التعلم السياقي", desc: "كلمات متعلمة في قصص" },
+                      { icon: "fa-arrows-spin", title: "تكرار متباعد", desc: "مراجعة ذكية" },
+                      { icon: "fa-comments", title: "الذاكرة القائمة على الاستخدام", desc: "هايفي بيأجبرك تستخدم الكلمات" }
+                  ],
+                  script: "القوائم مش بتشتغل عشان الدماغ بيتذكر القصص. كل كلمة بتظهر في قصص متعددة. هايفي بيأجبرك تستخدم الكلمات، وده بيخلق ذاكرة دائمة."
+                },
+                { id: 24, pain: "صعوبة النطق", question: "بعض أصوات الإنجليزي مستحيلة؟", category: "speaking",
+                  features: [
+                      { icon: "fa-voice", title: "هايفي - تصحيح صوت بصوت", desc: "بيكشف الأصوات الصعبة" },
+                      { icon: "fa-headphones", title: "صوت القاموس", desc: "اسمع النطق الصح" },
+                      { icon: "fa-user-doctor", title: "تدريب حصص فردية", desc: "وضعية الفم والتقنية" }
+                  ],
+                  script: "بعض أصوات الإنجليزي مش موجودة في العربي. هايفي بيكشف بالظبط إيه الأصوات اللي بتعبك ويديك تمرينات مستهدفة. كل صوت قابل للتعلم مع التوجيه الصح."
+                },
+                { id: 25, pain: "عدم التركيز أثناء الحصة", question: "دماغك بيتوه خلال الدراسة؟", category: "confidence",
+                  features: [
+                      { icon: "fa-hourglass-start", title: "جلسات قصيرة جذابة", desc: "20-30 دقيقة، محتوى قصصي" },
+                      { icon: "fa-gamepad", title: "AI تفاعلي", desc: "هايفي بيخليك تشارك فعلياً" },
+                      { icon: "fa-shuffle", title: "تنوع المحتوى", desc: "بيحول الأنشطة قبل الملل" }
+                  ],
+                  script: "الدروس الطويلة المملة بتقتل التركيز. English Hive بيستخدم التعلم المصغر - جلسات 20-30 دقيقة بمحتوى قصصي جذاب و AI تفاعلي."
+                }
+            ];
+        },
+        
+        setupListeners() {
+            const searchInput = document.getElementById('studyPlanSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    this.searchTerm = e.target.value.toLowerCase();
+                    this.applyFilters();
+                });
+            }
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.close();
+                }
+            });
+            
+            const modal = document.getElementById('studyPlansModal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        this.close();
+                    }
+                });
+            }
+        },
+        
+        filter(category) {
+            this.currentFilter = category;
+            
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.dataset.filter === category) {
+                    chip.classList.add('active');
+                }
+            });
+            
+            this.applyFilters();
+        },
+        
+        applyFilters() {
+            this.filteredPlans = this.plans.filter(plan => {
+                const matchesFilter = this.currentFilter === 'all' || plan.category === this.currentFilter;
+                if (!matchesFilter) return false;
+                
+                if (!this.searchTerm) return true;
+                
+                return plan.pain.includes(this.searchTerm) || 
+                       plan.question.includes(this.searchTerm) ||
+                       plan.features.some(f => f.title.includes(this.searchTerm) || f.desc.includes(this.searchTerm)) ||
+                       plan.script.includes(this.searchTerm);
+            });
+            
+            this.render();
+        },
+        
+        render() {
+            const grid = document.getElementById('studyPlansGrid');
+            const countEl = document.getElementById('planCount');
+            
+            if (countEl) {
+                countEl.textContent = `${this.filteredPlans.length} خطة`;
+            }
+            
+            if (!grid) return;
+            
+            if (this.filteredPlans.length === 0) {
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 5rem 3rem;">
+                        <i class="fas fa-search" style="font-size: 4rem; color: var(--text-soft); opacity: 0.3; margin-bottom: 1.5rem;"></i>
+                        <p class="text-lg font-bold" style="font-size: 1.5rem; color: var(--text-main); font-family: var(--font-arabic);">مفيش نتايج تطابق بحثك</p>
+                        <p class="text-muted" style="font-size: 1.1rem; font-family: var(--font-arabic);">جرب كلمة تانية أو غير الفلتر</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const gridHtml = this.filteredPlans.map(plan => `
+                <div class="study-plan-card">
+                    <div class="plan-card-header">
+                        <span class="pain-point-tag">
+                            <i class="fas fa-circle-exclamation" style="margin-left: 0.5rem;"></i>
+                            ${plan.pain}
+                        </span>
+                        <div class="entry-question-text">"${plan.question}"</div>
+                    </div>
+                    
+                    <div class="plan-features">
+                        ${plan.features.map(f => `
+                            <div class="feature-row">
+                                <div class="feature-icon-small">
+                                    <i class="fas ${f.icon}"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <div class="feature-title">${f.title}</div>
+                                    <div class="feature-desc-small">${f.desc}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="script-box" onclick="StudyPlans.copyScript('${plan.script.replace(/'/g, "\\'")}')">
+                        <div class="script-label-small">
+                            <i class="fas fa-microphone-alt"></i>
+                            سكريبت البيع
+                            <i class="fas fa-copy" style="margin-right: auto;"></i>
+                        </div>
+                        <div class="script-text">"${plan.script}"</div>
+                        <div class="copy-indicator">
+                            <i class="fas fa-check"></i> اضغط للنسخ
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            grid.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+                    ${gridHtml}
+                </div>
+            `;
+        },
+        
+        copyScript(text) {
+            navigator.clipboard?.writeText(text).then(() => {
+                this.showToast('✅ تم نسخ السكريبت، تقدر تستخدمه مع العميل', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                this.showToast('✅ تم نسخ السكريبت', 'success');
+            });
+        },
+        
+        copyQuickRef(key) {
+            const response = this.quickRefs[key];
+            if (response) {
+                const text = `لو نفسك قالتلك: "${key}"\nرد عليها: "${response}"`;
+                navigator.clipboard?.writeText(text).then(() => {
+                    this.showToast(`✅ تم نسخ رد: "${response}"`, 'success');
+                }).catch(() => {
+                    this.showToast('✅ تم نسخ الرد', 'success');
+                });
+            }
+        },
+        
+        showToast(msg, type = 'success') {
+            if (typeof App !== 'undefined' && App.toast) {
+                App.toast(msg, type);
+            } else {
+                const container = document.getElementById('toastContainer');
+                if (container) {
+                    const toast = document.createElement('div');
+                    toast.className = `toast study-toast ${type}`;
+                    toast.innerHTML = `
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                        <span>${msg}</span>
+                    `;
+                    container.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                } else {
+                    alert(msg);
+                }
+            }
+        },
+        
+        open() {
+            const modal = document.getElementById('studyPlansModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                this.init();
+            }
+        },
+        
+        close() {
+            const modal = document.getElementById('studyPlansModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+    };
+
+    // --- Treasury Module ---
+    const Treasury = {
+        receipts: [],
+
+        async load(agentFilter) {
+            try {
+                let query = sb.from('receipts')
+                    .select('*, users(name, role)')
+                    .order('issued_at', { ascending: false });
+
+                if (state.user?.role === 'agent') {
+                    query = query.eq('agent_id', state.user.id);
+                } else if (agentFilter) {
+                    query = query.eq('agent_id', agentFilter);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+                this.receipts = data || [];
+                return this.receipts;
+            } catch(err) {
+                App.toast('خطأ في تحميل الخزينة: ' + err.message, 'error');
+                return [];
+            }
+        },
+
+        openReceiptModal(lead) {
+            const clientInput = document.getElementById('receiptClientName');
+            if (clientInput) clientInput.value = lead ? (lead.name || '') : '';
+            document.getElementById('receiptAmount').value = '';
+            document.getElementById('receiptNotes').value = '';
+            document.getElementById('receiptService').value = 'course';
+            document.getElementById('receiptTermsCheck').checked = false;
+            document.getElementById('receiptModal').classList.remove('hidden');
+        },
+
+        closeReceiptModal() {
+            document.getElementById('receiptModal').classList.add('hidden');
+        },
+
+        async issueReceipt() {
+            const clientName = document.getElementById('receiptClientName')?.value?.trim();
+            const amount = parseFloat(document.getElementById('receiptAmount')?.value);
+            const service = document.getElementById('receiptService')?.value;
+            const notes = document.getElementById('receiptNotes')?.value?.trim();
+            const termsAccepted = document.getElementById('receiptTermsCheck')?.checked;
+
+            if (!clientName) { App.toast('يرجى إدخال اسم العميل', 'error'); return; }
+            if (!amount || amount <= 0) { App.toast('يرجى إدخال مبلغ صحيح', 'error'); return; }
+            if (!termsAccepted) { App.toast('يجب الموافقة على الشروط والأحكام', 'error'); return; }
+
+            const receiptNum = 'RC-' + Date.now().toString().slice(-6);
+
+            try {
+                // Ensure CRM session variables are set before insert
+                await sb.rpc('set_crm_user', {
+                    user_id: state.user.id,
+                    user_role: state.user.role
+                });
+
+                const { data, error } = await sb.from('receipts').insert([{
+                    receipt_number: receiptNum,
+                    client_name: clientName,
+                    amount: amount,
+                    service_type: service,
+                    notes: notes,
+                    agent_id: state.user.id,
+                    agent_name: state.user.name,
+                    issued_at: new Date().toISOString(),
+                    terms_accepted: true
+                }]).select().single();
+
+                if (error) throw error;
+
+                App.toast('✅ تم إصدار الإيصال بنجاح!', 'success');
+                this.closeReceiptModal();
+                this.showReceiptView(data);
+
+                if (state.view === 'treasury') {
+                    this.renderTreasury();
+                }
+            } catch(err) {
+                App.toast('خطأ في إصدار الإيصال: ' + err.message, 'error');
+            }
+        },
+
+        showReceiptView(receipt) {
+            const isOwner = state.user?.role === 'owner';
+            const serviceLabel = { 'course': 'كورس', 'extra_sessions': 'حصص إضافية' }[receipt.service_type] || receipt.service_type;
+            const issueDate = new Date(receipt.issued_at).toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
+
+            const viewModalHeader = document.getElementById('receiptViewModalActions');
+            if (viewModalHeader) {
+                viewModalHeader.innerHTML = `
+                    <button class="btn btn-primary" onclick="Treasury.printReceipt()"><i class="fas fa-print"></i> طباعة</button>
+                    ${isOwner ? `
+                    <button class="btn btn-ghost" style="border:2px solid var(--warning); color:var(--warning);" onclick="document.getElementById('receiptViewModal').classList.add('hidden'); Treasury.openEditModal(${JSON.stringify(receipt).replace(/"/g,'&quot;')})">
+                        <i class="fas fa-pen-to-square"></i> تعديل
+                    </button>
+                    <button class="btn btn-ghost" style="border:2px solid var(--danger); color:var(--danger);" onclick="document.getElementById('receiptViewModal').classList.add('hidden'); Treasury.openDeleteModal(${JSON.stringify(receipt).replace(/"/g,'&quot;')})">
+                        <i class="fas fa-trash-can"></i> حذف
+                    </button>` : ''}
+                    <i class="fas fa-times" onclick="document.getElementById('receiptViewModal').classList.add('hidden')" style="cursor:pointer; font-size:1.1rem; color:var(--text-muted);"></i>
+                `;
+            }
+
+            document.getElementById('receiptPrintArea').innerHTML = `
+                <div id="receiptDoc" style="background:#fff; border:2px solid var(--border-light); border-radius:16px; overflow:hidden;">
+                    <div style="background:linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding:1.5rem 2rem; color:white; text-align:center;">
+                        <div style="font-size:1.75rem; font-weight:800; letter-spacing:.02em; margin-bottom:.25rem;">I Plus One</div>
+                        <div style="font-size:.9rem; opacity:.85;">Language Services - إيصال رسمي معتمد</div>
+                    </div>
+                    <div style="padding:1.5rem 2rem; border-bottom:2px dashed var(--border-light); display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:.25rem;">رقم الإيصال</div>
+                            <div style="font-weight:700; font-size:1.1rem; color:var(--primary);">${receipt.receipt_number}</div>
+                        </div>
+                        <div style="text-align:left;">
+                            <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:.25rem;">تاريخ الإصدار</div>
+                            <div style="font-weight:600;">${issueDate}</div>
+                        </div>
+                    </div>
+                    <div style="padding:1.5rem 2rem; display:flex; flex-direction:column; gap:1rem;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div style="background:var(--bg-body); padding:1rem; border-radius:12px;">
+                                <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:.35rem; text-transform:uppercase; letter-spacing:.05em;">اسم العميل</div>
+                                <div style="font-weight:700; font-size:1rem;">${receipt.client_name}</div>
+                            </div>
+                            <div style="background:var(--bg-body); padding:1rem; border-radius:12px;">
+                                <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:.35rem; text-transform:uppercase; letter-spacing:.05em;">المندوب</div>
+                                <div style="font-weight:700; font-size:1rem;">${receipt.agent_name}</div>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div style="background:var(--bg-body); padding:1rem; border-radius:12px;">
+                                <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:.35rem; text-transform:uppercase; letter-spacing:.05em;">نوع الخدمة</div>
+                                <div style="font-weight:700; font-size:1rem;">${serviceLabel}</div>
+                            </div>
+                            <div style="background:linear-gradient(135deg,var(--success-bg) 0%,#fff 100%); padding:1rem; border-radius:12px; border:1px solid #bbf7d0;">
+                                <div style="font-size:.7rem; color:var(--success); margin-bottom:.35rem; text-transform:uppercase; letter-spacing:.05em;">المبلغ المدفوع</div>
+                                <div style="font-weight:800; font-size:1.5rem; color:var(--success);">${Number(receipt.amount).toLocaleString('ar-EG')} ج.م</div>
+                            </div>
+                        </div>
+                        ${receipt.notes ? `
+                        <div style="background:var(--bg-body); padding:1rem; border-radius:12px;">
+                            <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:.35rem; text-transform:uppercase; letter-spacing:.05em;">ملاحظات</div>
+                            <div style="font-size:.9rem;">${receipt.notes}</div>
+                        </div>` : ''}
+                    </div>
+                    
+                    <!-- Terms and Conditions Section -->
+                    <div style="padding:1.25rem 2rem; background:linear-gradient(135deg,#f0fdf4 0%,#fff 100%); border-top:1px solid #bbf7d0; border-bottom:1px solid #bbf7d0; direction:rtl;">
+                        <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.75rem;">
+                            <i class="fas fa-file-contract" style="color:var(--success); font-size:1rem;"></i>
+                            <strong style="font-size:.85rem; color:var(--success);">الشروط والأحكام المعتمدة</strong>
+                        </div>
+                        <div style="font-size:.72rem; color:var(--text-muted); line-height:1.8; font-family:var(--font-arabic);">
+                            <p style="margin-bottom:.4rem;"><strong>١. سياسة الدفع:</strong> يُسدَّد المبلغ الكامل عند التسجيل ولا يُرد في أي حال من الأحوال بعد بدء الخدمة.</p>
+                            <p style="margin-bottom:.4rem;"><strong>٢. الاستخدام الشخصي:</strong> الاشتراك شخصي ولا يجوز نقله أو مشاركته مع أي طرف آخر.</p>
+                            <p style="margin-bottom:.4rem;"><strong>٣. مدة الخدمة:</strong> تبدأ مدة الاشتراك من تاريخ التفعيل وتنتهي وفقًا للباقة المختارة دون إمكانية التمديد المجاني.</p>
+                            <p style="margin-bottom:.4rem;"><strong>٤. الحصص الإضافية:</strong> يجب حجز الحصص الإضافية مسبقًا وفق الجدول الزمني المتاح، ولا يُعوَّض عن الحصص الملغاة بإشعار أقل من 24 ساعة.</p>
+                            <p style="margin-bottom:.4rem;"><strong>٥. المحتوى الرقمي:</strong> جميع المواد التعليمية محمية بحقوق الملكية الفكرية ولا يُسمح بنسخها أو توزيعها.</p>
+                            <p style="margin-bottom:.4rem;"><strong>٦. تعديل الخدمة:</strong> تحتفظ الشركة بحق تعديل جدول الحصص أو محتوى الكورس مع إخطار الطلاب مسبقًا.</p>
+                            <p style="margin-bottom:.4rem;"><strong>٧. السلوك والانضباط:</strong> يلتزم الطالب بقواعد الاحترام المتبادل، وتحتفظ الشركة بحق إيقاف الخدمة في حالة الإخلال بذلك دون استرداد.</p>
+                            <p><strong>٨. الموافقة:</strong> بدفع المبلغ المذكور في هذا الإيصال يُقرّ العميل بقراءة هذه الشروط والموافقة عليها كاملةً.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="padding:1rem 2rem; background:linear-gradient(135deg,#f0fdf4 0%,#fff 100%); direction:rtl;">
+                        <div style="display:flex; align-items:center; gap:.5rem;">
+                            <i class="fas fa-check-circle" style="color:var(--success); font-size:.9rem;"></i>
+                            <span style="font-size:.75rem; color:var(--success); font-weight:600;">تم قبول الشروط والأحكام</span>
+                        </div>
+                        <div style="font-size:.68rem; color:var(--text-muted); line-height:1.6; margin-top:.35rem; padding-right:1.5rem;">
+                            بدفع هذا المبلغ يُقرّ العميل بموافقته على جميع الشروط والأحكام المعتمدة من I Plus One Language Services.
+                        </div>
+                    </div>
+                    
+                    <div style="padding:.75rem 2rem; background:var(--border-light); text-align:center;">
+                        <div style="font-size:.7rem; color:var(--text-soft);">هذا الإيصال صادر إلكترونياً ومعتمد بدون توقيع</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('receiptViewModal').classList.remove('hidden');
+        },
+
+        printReceipt() {
+            const content = document.getElementById('receiptDoc')?.outerHTML;
+            if (!content) return;
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html><head>
+                <meta charset="UTF-8">
+                <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+                <style>
+                    :root {
+                        --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #e0e7ff;
+                        --success: #10b981; --success-bg: #d1fae5;
+                        --warning: #f59e0b; --warning-bg: #fef3c7;
+                        --danger: #ef4444; --danger-bg: #fee2e2;
+                        --info: #3b82f6; --info-bg: #dbeafe;
+                        --bg-body: #f8fafc; --border-light: #f1f5f9;
+                        --text-muted: #64748b; --text-soft: #94a3b8;
+                        --font-arabic: 'Cairo', sans-serif;
+                    }
+                    body { font-family:'Cairo',sans-serif; margin:0; padding:2rem; background:#f8fafc; direction:rtl; }
+                    @media print { body { background:white; padding:0; } }
+                </style>
+                </head><body>${content}<script>window.onload=()=>{window.print();window.close();}<\/script></body></html>
+            `);
+            win.document.close();
+        },
+
+        async renderTreasury() {
+            const workspace = document.getElementById('workspace');
+            if (workspace) workspace.style.display = 'none';
+            const perfContainer = document.getElementById('teamPerformanceContainer');
+            if (perfContainer) perfContainer.style.display = 'none';
+
+            let container = document.getElementById('treasuryContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'treasuryContainer';
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) mainContent.appendChild(container);
+            }
+            container.style.display = 'block';
+
+            const isPrivileged = state.user?.role === 'manager' || state.user?.role === 'owner';
+
+            container.innerHTML = `<div class="card" style="padding:2rem; text-align:center;">
+                <div class="skeleton" style="height:200px; width:100%;"></div></div>`;
+
+            await this.load();
+            this.renderTreasuryContent(container, isPrivileged);
+        },
+
+        renderTreasuryContent(container, isPrivileged) {
+            const agentOptions = isPrivileged ? state.agents.map(a =>
+                `<option value="${a.id}">${a.name}</option>`).join('') : '';
+
+            const totalAmount = this.receipts.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+            const courseTotal = this.receipts.filter(r => r.service_type === 'course').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+            const sessionTotal = this.receipts.filter(r => r.service_type === 'extra_sessions').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+
+            container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div class="card" style="padding:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                        <div>
+                            <h2 style="font-family:var(--font-display); font-weight:700; font-size:1.5rem; margin-bottom:.35rem;">
+                                <i class="fas fa-vault" style="color:var(--primary); margin-right:.75rem;"></i>
+                                ${isPrivileged ? 'خزينة الفريق' : 'خزينتي'}
+                            </h2>
+                            <p class="text-muted text-sm"><i class="fas fa-calendar-alt"></i> جميع الإيصالات الصادرة</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="Treasury.openReceiptModal(null)">
+                            <i class="fas fa-plus"></i> إيصال جديد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="card stat-card">
+                        <div class="stat-icon-box" style="background:linear-gradient(135deg,var(--success-bg) 0%,#fff 100%); color:var(--success);">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold" style="font-size:1.75rem;">${totalAmount.toLocaleString('ar-EG')} ج.م</h2>
+                            <p class="text-xs text-muted font-bold uppercase">إجمالي الإيرادات</p>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-icon-box" style="background:linear-gradient(135deg,var(--primary-light) 0%,#fff 100%); color:var(--primary);">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold" style="font-size:1.75rem;">${courseTotal.toLocaleString('ar-EG')} ج.م</h2>
+                            <p class="text-xs text-muted font-bold uppercase">الكورسات</p>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-icon-box" style="background:linear-gradient(135deg,var(--info-bg) 0%,#fff 100%); color:var(--info);">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold" style="font-size:1.75rem;">${sessionTotal.toLocaleString('ar-EG')} ج.م</h2>
+                            <p class="text-xs text-muted font-bold uppercase">الحصص الإضافية</p>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-icon-box" style="background:linear-gradient(135deg,var(--warning-bg) 0%,#fff 100%); color:var(--warning);">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold" style="font-size:1.75rem;">${this.receipts.length}</h2>
+                            <p class="text-xs text-muted font-bold uppercase">إجمالي الإيصالات</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="display:flex; flex-direction:column;">
+                    <div class="panel-header">
+                        <span class="panel-title"><i class="fas fa-filter" style="margin-right:.5rem; color:var(--primary);"></i>سجل الإيصالات</span>
+                    </div>
+                    <div style="padding:1rem 1.5rem; background:rgba(255,255,255,.5); border-bottom:1px solid var(--border-light); display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
+                        ${isPrivileged ? `
+                        <select id="tAgentFilter" class="select-filter" onchange="Treasury.applyFilters()" style="min-width:160px;">
+                            <option value="">كل المندوبين</option>
+                            ${agentOptions}
+                        </select>` : ''}
+                        <input type="date" id="tDateFrom" class="select-filter" onchange="Treasury.applyFilters()" style="min-width:140px;" title="من تاريخ">
+                        <input type="date" id="tDateTo" class="select-filter" onchange="Treasury.applyFilters()" style="min-width:140px;" title="إلى تاريخ">
+                        <select id="tServiceFilter" class="select-filter" onchange="Treasury.applyFilters()">
+                            <option value="">كل الخدمات</option>
+                            <option value="course">كورس</option>
+                            <option value="extra_sessions">حصص إضافية</option>
+                        </select>
+                        <input type="number" id="tAmountMin" class="select-filter" onchange="Treasury.applyFilters()" placeholder="مبلغ من" style="min-width:110px;">
+                        <input type="number" id="tAmountMax" class="select-filter" onchange="Treasury.applyFilters()" placeholder="مبلغ إلى" style="min-width:110px;">
+                        <button class="btn btn-ghost" onclick="Treasury.clearFilters()"><i class="fas fa-times"></i> مسح الفلاتر</button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse;" id="treasuryTable">
+                            <thead>
+                                <tr style="border-bottom:2px solid var(--border-light); background:rgba(255,255,255,.5);">
+                                    <th style="text-align:right; padding:.75rem 1.5rem;">رقم الإيصال</th>
+                                    <th style="text-align:right; padding:.75rem 1rem;">العميل</th>
+                                    ${isPrivileged ? `<th style="text-align:right; padding:.75rem 1rem;">المندوب</th>` : ''}
+                                    <th style="text-align:right; padding:.75rem 1rem;">الخدمة</th>
+                                    <th style="text-align:right; padding:.75rem 1rem;">المبلغ</th>
+                                    <th style="text-align:right; padding:.75rem 1rem;">التاريخ</th>
+                                    <th style="text-align:center; padding:.75rem 1rem;">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="treasuryTableBody">
+                                ${this.buildTableRows(this.receipts, isPrivileged)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+        },
+
+        buildTableRows(receipts, isPrivileged) {
+            const isOwner = state.user?.role === 'owner';
+            if (!receipts.length) {
+                return `<tr><td colspan="${isPrivileged ? 7 : 6}" style="text-align:center; padding:3rem; color:var(--text-soft);">
+                    <i class="fas fa-inbox" style="font-size:2rem; opacity:.3; display:block; margin-bottom:1rem;"></i>
+                    لا توجد إيصالات
+                </td></tr>`;
+            }
+            return receipts.map(r => {
+                const serviceLabel = { 'course': 'كورس', 'extra_sessions': 'حصص إضافية' }[r.service_type] || r.service_type;
+                const serviceBadge = r.service_type === 'course' ? 'badge-new' : 'badge-followup';
+                const date = new Date(r.issued_at).toLocaleDateString('ar-EG');
+                const rJson = JSON.stringify(r).replace(/"/g,'&quot;');
+                return `<tr style="border-bottom:1px solid var(--border-light); cursor:pointer;" onmouseover="this.style.background='var(--border-light)'" onmouseout="this.style.background=''">
+                    <td style="padding:1rem 1.5rem; font-weight:600; color:var(--primary);">${r.receipt_number}</td>
+                    <td style="padding:1rem; font-weight:600;">${r.client_name}</td>
+                    ${isPrivileged ? `<td style="padding:1rem; color:var(--text-muted);">${r.agent_name || '-'}</td>` : ''}
+                    <td style="padding:1rem;"><span class="badge ${serviceBadge}">${serviceLabel}</span></td>
+                    <td style="padding:1rem; font-weight:700; color:var(--success);">${Number(r.amount).toLocaleString('ar-EG')} ج.م</td>
+                    <td style="padding:1rem; color:var(--text-muted);">${date}</td>
+                    <td style="padding:1rem; text-align:center;">
+                        <div style="display:flex; gap:.35rem; justify-content:center;">
+                            <button class="btn btn-ghost btn-icon" onclick="Treasury.showReceiptView(${rJson})" title="عرض الإيصال">
+                                <i class="fas fa-eye" style="color:var(--primary);"></i>
+                            </button>
+                            ${isOwner ? `
+                            <button class="btn btn-ghost btn-icon" onclick="Treasury.openEditModal(${rJson})" title="تعديل الإيصال">
+                                <i class="fas fa-pen-to-square" style="color:var(--warning);"></i>
+                            </button>
+                            <button class="btn btn-ghost btn-icon" onclick="Treasury.openDeleteModal(${rJson})" title="حذف الإيصال">
+                                <i class="fas fa-trash-can" style="color:var(--danger);"></i>
+                            </button>` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        },
+
+        applyFilters() {
+            const agentId = document.getElementById('tAgentFilter')?.value;
+            const dateFrom = document.getElementById('tDateFrom')?.value;
+            const dateTo = document.getElementById('tDateTo')?.value;
+            const service = document.getElementById('tServiceFilter')?.value;
+            const amountMin = parseFloat(document.getElementById('tAmountMin')?.value) || 0;
+            const amountMax = parseFloat(document.getElementById('tAmountMax')?.value) || Infinity;
+            const isPrivileged = state.user?.role === 'manager' || state.user?.role === 'owner';
+
+            const filtered = this.receipts.filter(r => {
+                if (agentId && r.agent_id != agentId) return false;
+                if (service && r.service_type !== service) return false;
+                if (dateFrom && new Date(r.issued_at) < new Date(dateFrom)) return false;
+                if (dateTo && new Date(r.issued_at) > new Date(dateTo + 'T23:59:59')) return false;
+                const amt = parseFloat(r.amount || 0);
+                if (amt < amountMin || amt > amountMax) return false;
+                return true;
+            });
+
+            const tbody = document.getElementById('treasuryTableBody');
+            if (tbody) tbody.innerHTML = this.buildTableRows(filtered, isPrivileged);
+        },
+
+        openEditModal(receipt) {
+            if (state.user?.role !== 'owner') {
+                App.toast('هذا الإجراء محجوز للمالك فقط', 'error');
+                return;
+            }
+            document.getElementById('editReceiptId').value = receipt.id;
+            document.getElementById('editReceiptClientName').value = receipt.client_name || '';
+            document.getElementById('editReceiptAmount').value = receipt.amount || '';
+            document.getElementById('editReceiptService').value = receipt.service_type || 'course';
+            document.getElementById('editReceiptNotes').value = receipt.notes || '';
+            document.getElementById('editReceiptModal').classList.remove('hidden');
+        },
+
+        async saveEdit() {
+            if (state.user?.role !== 'owner') return;
+
+            const id = document.getElementById('editReceiptId')?.value;
+            const clientName = document.getElementById('editReceiptClientName')?.value?.trim();
+            const amount = parseFloat(document.getElementById('editReceiptAmount')?.value);
+            const service = document.getElementById('editReceiptService')?.value;
+            const notes = document.getElementById('editReceiptNotes')?.value?.trim();
+
+            if (!clientName) { App.toast('يرجى إدخال اسم العميل', 'error'); return; }
+            if (!amount || amount <= 0) { App.toast('يرجى إدخال مبلغ صحيح', 'error'); return; }
+
+            try {
+                const { error } = await sb.from('receipts')
+                    .update({
+                        client_name: clientName,
+                        amount: amount,
+                        service_type: service,
+                        notes: notes,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                document.getElementById('editReceiptModal').classList.add('hidden');
+                App.toast('✅ تم تعديل الإيصال بنجاح', 'success');
+
+                const idx = this.receipts.findIndex(r => r.id == id);
+                if (idx !== -1) {
+                    this.receipts[idx] = { ...this.receipts[idx], client_name: clientName, amount, service_type: service, notes };
+                }
+
+                if (state.view === 'treasury') this.renderTreasury();
+            } catch(err) {
+                App.toast('خطأ في تعديل الإيصال: ' + err.message, 'error');
+            }
+        },
+
+        openDeleteModal(receipt) {
+            if (state.user?.role !== 'owner') {
+                App.toast('هذا الإجراء محجوز للمالك فقط', 'error');
+                return;
+            }
+            document.getElementById('deleteReceiptId').value = receipt.id;
+            document.getElementById('deleteReceiptNumLabel').textContent = receipt.receipt_number;
+            document.getElementById('deleteReceiptModal').classList.remove('hidden');
+        },
+
+        async confirmDelete() {
+            if (state.user?.role !== 'owner') return;
+
+            const id = document.getElementById('deleteReceiptId')?.value;
+            if (!id) return;
+
+            try {
+                const { error } = await sb.from('receipts').delete().eq('id', id);
+                if (error) throw error;
+
+                document.getElementById('deleteReceiptModal').classList.add('hidden');
+                App.toast('🗑️ تم حذف الإيصال بنجاح', 'success');
+
+                this.receipts = this.receipts.filter(r => r.id != id);
+
+                if (state.view === 'treasury') this.renderTreasury();
+            } catch(err) {
+                App.toast('خطأ في حذف الإيصال: ' + err.message, 'error');
+            }
+        },
+
+        clearFilters() {
+            ['tAgentFilter','tDateFrom','tDateTo','tServiceFilter','tAmountMin','tAmountMax'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            this.applyFilters();
+        }
+    };
+
+    window.onload = () => Auth.init();
+    window.App = App;
+    window.StudyPlans = StudyPlans;
+    window.Treasury = Treasury;
+</script>
